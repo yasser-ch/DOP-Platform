@@ -1,0 +1,12 @@
+target/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.env
+*.pem
+*.key
