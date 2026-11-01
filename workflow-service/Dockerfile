@@ -1,8 +1,16 @@
-# Build : mvn -pl workflow-service -am package  puis  docker build -t dop/workflow-service workflow-service
+# Build : docker build -f workflow-service/Dockerfile -t dop/workflow-service .   (depuis la racine)
+
+# ---------- Étape 1 : compilation ----------
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /build
+COPY . .
+RUN mvn -B -pl workflow-service -am package -DskipTests
+
+# ---------- Étape 2 : image finale ----------
 FROM eclipse-temurin:21-jre
 RUN useradd --system --uid 10001 app
 WORKDIR /app
-COPY target/workflow-service-*.jar app.jar
+COPY --from=build /build/workflow-service/target/workflow-service-*.jar app.jar
 USER 10001
 EXPOSE 8085
 ENTRYPOINT ["java","-jar","/app/app.jar"]
