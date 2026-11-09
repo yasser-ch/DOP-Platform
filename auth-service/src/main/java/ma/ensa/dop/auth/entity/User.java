@@ -1,7 +1,7 @@
 package ma.ensa.dop.auth.entity;
 
 import jakarta.persistence.*;
-import ma.ensa.dop.auth.Role;
+import ma.ensa.dop.auth.util.Role;
 
 // User.java
 @Entity
