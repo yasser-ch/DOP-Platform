@@ -14,9 +14,3 @@ management:
     web:
       exposure:
         include: health,info
-
-dop:
-  jwt:
-    secret: ${JWT_SECRET:}
-    issuer: dop-auth-service
-    ttl-minutes: 15
