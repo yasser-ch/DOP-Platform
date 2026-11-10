@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,7 +17,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = {"dop.admin.email=admin@test.ma", "dop.admin.password=Admin12345"})
+@SpringBootTest(
+    properties = {"dop.admin.email=admin@test.ma", "dop.admin.password=Admin12345"})
+@TestPropertySource(
+    properties = "dop.jwt.secret=test-only-secret-0123456789-abcdefghij"
+
+)
 @AutoConfigureMockMvc
 class RoleManagementTest {
 

@@ -1,7 +1,7 @@
 package ma.ensa.dop.auth.service;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import ma.ensa.dop.auth.util.Role;
+import ma.ensa.dop.auth.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;

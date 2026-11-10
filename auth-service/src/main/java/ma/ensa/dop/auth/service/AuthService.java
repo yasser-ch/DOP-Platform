@@ -1,7 +1,7 @@
 package ma.ensa.dop.auth.service;
 
 import org.springframework.transaction.annotation.Transactional;
-import ma.ensa.dop.auth.util.Role;
+import ma.ensa.dop.auth.Role;
 import ma.ensa.dop.auth.dto.LoginRequest;
 import ma.ensa.dop.auth.dto.RegisterRequest;
 import ma.ensa.dop.auth.dto.UserResponse;
