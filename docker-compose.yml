@@ -30,6 +30,8 @@ services:
     environment:
       SERVER_PORT: 8081
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
+      DOP_ADMIN_EMAIL: "${DOP_ADMIN_EMAIL:?DOP_ADMIN_EMAIL manquant, voir .env.example}"
+      DOP_ADMIN_PASSWORD: "${DOP_ADMIN_PASSWORD:?DOP_ADMIN_PASSWORD manquant, voir .env.example}"
     ports:
       - "127.0.0.1:8081:8081"
 

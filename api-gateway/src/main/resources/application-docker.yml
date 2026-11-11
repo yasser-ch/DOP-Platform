@@ -8,8 +8,6 @@ spring:
           uri: http://auth-service:8081
           predicates:
             - Path=/auth/**
-          filters:
-            - StripPrefix=1
         - id: assujettis
           uri: http://assujettis-service:8082
           predicates:
