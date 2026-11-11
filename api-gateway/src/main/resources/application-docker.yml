@@ -1,0 +1,66 @@
+# Profil Spring `docker` : routes de la gateway vers les services du reseau Compose (DODP-14).
+# Active par SPRING_PROFILES_ACTIVE=docker dans docker-compose.yml.
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+        - id: assujettis
+          uri: http://assujettis-service:8082
+          predicates:
+            - Path=/assujettis/**
+          filters:
+            - StripPrefix=1
+        - id: declaration
+          uri: http://declaration-service:8083
+          predicates:
+            - Path=/declaration/**
+          filters:
+            - StripPrefix=1
+        - id: document
+          uri: http://document-service:8084
+          predicates:
+            - Path=/document/**
+          filters:
+            - StripPrefix=1
+        - id: workflow
+          uri: http://workflow-service:8085
+          predicates:
+            - Path=/workflow/**
+          filters:
+            - StripPrefix=1
+        - id: reconciliation
+          uri: http://reconciliation-service:8086
+          predicates:
+            - Path=/reconciliation/**
+          filters:
+            - StripPrefix=1
+        - id: notification
+          uri: http://notification-service:8087
+          predicates:
+            - Path=/notification/**
+          filters:
+            - StripPrefix=1
+        - id: audit
+          uri: http://audit-service:8088
+          predicates:
+            - Path=/audit/**
+          filters:
+            - StripPrefix=1
+        - id: reporting
+          uri: http://reporting-service:8089
+          predicates:
+            - Path=/reporting/**
+          filters:
+            - StripPrefix=1
+        - id: scoring
+          uri: http://scoring-service:8090
+          predicates:
+            - Path=/scoring/**
+          filters:
+            - StripPrefix=1
