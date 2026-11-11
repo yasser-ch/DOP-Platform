@@ -1,0 +1,216 @@
+/* ----- Button ----- */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ds-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.ds-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.ds-btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+.ds-btn--secondary {
+  background: var(--color-bg);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.ds-btn--secondary:hover:not(:disabled) {
+  background: var(--color-info-bg);
+}
+.ds-btn--danger {
+  background: var(--color-danger);
+  color: var(--color-on-primary);
+}
+.ds-btn--danger:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+/* ----- Field, Input, Select ----- */
+.ds-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+.ds-field__label {
+  font-weight: 600;
+}
+.ds-field__help {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+.ds-field__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.ds-input,
+.ds-select {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+}
+.ds-input[aria-invalid='true'],
+.ds-select[aria-invalid='true'] {
+  border-color: var(--color-danger);
+  border-width: 2px;
+}
+
+/* ----- Card ----- */
+.ds-card {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
+}
+.ds-card__title {
+  margin-bottom: var(--space-3);
+}
+
+/* ----- Table ----- */
+.ds-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.ds-table caption {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-weight: 600;
+}
+.ds-table th,
+.ds-table td {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+}
+.ds-table thead th {
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+}
+
+/* ----- Alert ----- */
+.ds-alert {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid currentcolor;
+  border-radius: var(--radius-md);
+}
+.ds-alert__title {
+  margin: 0;
+  font-weight: 700;
+}
+.ds-alert--info {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+}
+.ds-alert--success {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+.ds-alert--warning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.ds-alert--danger {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+/* ----- Badge de statut ----- */
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.125rem var(--space-3);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.ds-badge--success {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+.ds-badge--warning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.ds-badge--danger {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+.ds-badge--info {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+}
+.ds-badge--neutral {
+  color: var(--color-neutral);
+  background: var(--color-neutral-bg);
+}
+
+/* ----- Modal (élément <dialog> natif : focus piégé et Échap gérés par le navigateur) ----- */
+.ds-modal {
+  width: min(32rem, calc(100vw - 2rem));
+  padding: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
+}
+.ds-modal::backdrop {
+  background: rgb(27 36 51 / 55%);
+}
+.ds-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* ----- Spinner ----- */
+.ds-spinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: ds-spin 0.8s linear infinite;
+}
+@keyframes ds-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-spinner {
+    animation-duration: 2.4s;
+  }
+}

@@ -1,0 +1,57 @@
+/* Tokens du design system DOP : seul fichier à modifier pour changer l'identité visuelle.
+   Contrastes vérifiés WCAG 2.1 AA (voir docs/decisions/0003-design-system-brief.md). */
+:root {
+  /* Couleurs : neutres */
+  --color-bg: #ffffff;
+  --color-surface: #f4f6f9;
+  --color-text: #1b2433;
+  --color-text-muted: #4a5568;
+  --color-border: #cbd2dc;
+  --color-border-strong: #6b7685; /* bordure des champs : 3:1 minimum sur fond blanc */
+
+  /* Couleurs : action */
+  --color-primary: #1f3a5f;
+  --color-primary-hover: #16304f;
+  --color-on-primary: #ffffff;
+  --color-focus: #2b6cb0;
+
+  /* Couleurs : statuts (texte / fond) */
+  --color-success: #1e6b3a;
+  --color-success-bg: #e6f4ea;
+  --color-warning: #7a4b00;
+  --color-warning-bg: #fff4dc;
+  --color-danger: #9b1c1c;
+  --color-danger-bg: #fdecec;
+  --color-info: #1f3a5f;
+  --color-info-bg: #e8eff8;
+  --color-neutral: #2d3748;
+  --color-neutral-bg: #e9ecf1;
+
+  /* Typographie : deux polices auto-hébergées (@fontsource) */
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.625rem;
+  --text-2xl: 2.125rem;
+  --leading: 1.55;
+
+  /* Espacements */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Rayons et ombres */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-sm: 0 1px 2px rgb(27 36 51 / 8%);
+  --shadow-md: 0 4px 16px rgb(27 36 51 / 14%);
+
+  /* Mise en page */
+  --content-width: 72rem;
+}
