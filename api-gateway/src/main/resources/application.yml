@@ -4,6 +4,14 @@ server:
 spring:
   application:
     name: api-gateway
+  # ===== AJOUTÉ (DODP-21/22/23) : route vers assujettis-service =====
+  cloud:
+    gateway:
+      routes:
+        - id: assujettis-service
+          uri: ${ASSUJETTIS_URL:http://localhost:8082}   # en Docker Compose : http://assujettis-service:8082
+          predicates:
+            - Path=/assujettis/**
 
 management:
   endpoints:
