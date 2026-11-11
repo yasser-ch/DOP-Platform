@@ -1,0 +1,192 @@
+# DODP-14 (S4) - Environnement local : `docker compose up --build` lance tous les services.
+# Build : services Java depuis la racine du depot (contexte `.`) ; scoring-service depuis son dossier.
+#
+#   cp .env.example .env      # puis definir JWT_SECRET (32 caracteres minimum)
+#   docker compose up --build
+#   curl http://localhost:8080/auth/actuator/health   # via la gateway
+#
+# Reseau : tous les services partagent le reseau `dop-net` et se joignent par leur nom
+# de service (ex. http://auth-service:8081). Seule la gateway est le point d'entree prevu ;
+# les autres ports sont publies sur 127.0.0.1 uniquement, pour le debug local.
+
+x-java-service: &java-service
+  restart: unless-stopped
+  networks: [dop-net]
+  healthcheck:
+    test: ["CMD-SHELL", "curl -fsS http://localhost:$${SERVER_PORT}/actuator/health || wget -qO- http://localhost:$${SERVER_PORT}/actuator/health || exit 1"]
+    interval: 15s
+    timeout: 5s
+    retries: 10
+    start_period: 40s
+
+services:
+  auth-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    image: dop/auth-service:local
+    container_name: dop-auth
+    environment:
+      SERVER_PORT: 8081
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
+      DOP_ADMIN_EMAIL: "${DOP_ADMIN_EMAIL:?DOP_ADMIN_EMAIL manquant, voir .env.example}"
+      DOP_ADMIN_PASSWORD: "${DOP_ADMIN_PASSWORD:?DOP_ADMIN_PASSWORD manquant, voir .env.example}"
+    ports:
+      - "127.0.0.1:8081:8081"
+
+  assujettis-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: assujettis-service/Dockerfile
+    image: dop/assujettis-service:local
+    container_name: dop-assujettis
+    environment:
+      SERVER_PORT: 8082
+    ports:
+      - "127.0.0.1:8082:8082"
+
+  declaration-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: declaration-service/Dockerfile
+    image: dop/declaration-service:local
+    container_name: dop-declaration
+    environment:
+      SERVER_PORT: 8083
+    ports:
+      - "127.0.0.1:8083:8083"
+
+  document-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: document-service/Dockerfile
+    image: dop/document-service:local
+    container_name: dop-document
+    environment:
+      SERVER_PORT: 8084
+    ports:
+      - "127.0.0.1:8084:8084"
+
+  workflow-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: workflow-service/Dockerfile
+    image: dop/workflow-service:local
+    container_name: dop-workflow
+    environment:
+      SERVER_PORT: 8085
+    ports:
+      - "127.0.0.1:8085:8085"
+
+  reconciliation-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: reconciliation-service/Dockerfile
+    image: dop/reconciliation-service:local
+    container_name: dop-reconciliation
+    environment:
+      SERVER_PORT: 8086
+    ports:
+      - "127.0.0.1:8086:8086"
+
+  notification-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    image: dop/notification-service:local
+    container_name: dop-notification
+    environment:
+      SERVER_PORT: 8087
+    ports:
+      - "127.0.0.1:8087:8087"
+
+  audit-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: audit-service/Dockerfile
+    image: dop/audit-service:local
+    container_name: dop-audit
+    environment:
+      SERVER_PORT: 8088
+    ports:
+      - "127.0.0.1:8088:8088"
+
+  reporting-service:
+    <<: *java-service
+    build:
+      context: .
+      dockerfile: reporting-service/Dockerfile
+    image: dop/reporting-service:local
+    container_name: dop-reporting
+    environment:
+      SERVER_PORT: 8089
+    ports:
+      - "127.0.0.1:8089:8089"
+
+  scoring-service:
+    build:
+      context: ./scoring-service
+    image: dop/scoring-service:local
+    container_name: dop-scoring
+    restart: unless-stopped
+    networks: [dop-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    ports:
+      - "127.0.0.1:8090:8090"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: dop/api-gateway:local
+    container_name: dop-gateway
+    restart: unless-stopped
+    networks: [dop-net]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      assujettis-service:
+        condition: service_healthy
+      declaration-service:
+        condition: service_healthy
+      document-service:
+        condition: service_healthy
+      workflow-service:
+        condition: service_healthy
+      reconciliation-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      audit-service:
+        condition: service_healthy
+      reporting-service:
+        condition: service_healthy
+      scoring-service:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+networks:
+  dop-net:
+    name: dop-net
