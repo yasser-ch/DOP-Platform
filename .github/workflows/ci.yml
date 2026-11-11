@@ -1,0 +1,78 @@
+name: DOP Platform - CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test (Java 21)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Display tool versions
+        run: |
+          java -version
+          mvn -version
+
+      # Aucune option -DskipTests : un test en echec DOIT faire echouer ce job.
+      - name: Build all Maven modules and run tests
+        run: mvn --batch-mode --no-transfer-progress clean verify
+
+      - name: Upload Maven test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: maven-test-reports
+          path: |
+            **/target/surefire-reports/*.txt
+            **/target/surefire-reports/*.xml
+            **/target/failsafe-reports/*.txt
+            **/target/failsafe-reports/*.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  python-tests:
+    name: Test scoring-service (Python 3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: scoring-service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scoring-service/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Python tests
+        run: python -m pytest -v

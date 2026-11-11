@@ -4,9 +4,19 @@ server:
 spring:
   application:
     name: auth-service
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
+dop:
+  jwt:
+    secret: ${JWT_SECRET:}
+    issuer: dop-auth-service
+    ttl-minutes: 15
