@@ -30,8 +30,19 @@ frontend/
 ├── Dockerfile          # build Node 22, puis nginx non-root sur le port 8080
 └── src/
     ├── main.tsx        # monte l'application React
-    └── App.tsx         # page unique (test de santé)
+    ├── App.tsx         # page unique (test de santé)
+    └── api/            # couche d'accès à l'API (seul endroit qui connaît /api)
+        ├── types.ts      # types TypeScript des contrats du backend
+        ├── errors.ts     # ApiError et messages d'erreur en français
+        ├── client.ts     # client fetch unique : préfixe /api, timeout, Bearer, erreurs
+        └── endpoints.ts  # fonctions d'appel (register, login, listerAssujettis...)
 ```
+
+## Appeler l'API
+
+Les composants n'écrivent jamais de `fetch` ni de chemin d'API : ils importent les fonctions de `src/api/endpoints.ts`.
+Les erreurs arrivent sous forme d'`ApiError` (`kind` : `network`, `timeout`, `unauthorized`, `forbidden`, `server`, `client`) avec un message prêt à afficher en français.
+Le jeton JWT n'est pas géré ici : le contexte d'authentification (ticket S42) le fournit avec `setTokenProvider` et se déconnecte via `setUnauthorizedHandler` en cas de 401.
 
 ## Fonctionnement du proxy `/api`
 
