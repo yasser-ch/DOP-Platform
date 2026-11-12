@@ -1,43 +1,71 @@
 /* Tokens du design system DOP : seul fichier à modifier pour changer l'identité visuelle.
+   Deux couches : 1) couleurs brutes (palette), 2) rôles (ce que les composants utilisent).
    Contrastes vérifiés WCAG 2.1 AA (voir docs/decisions/0003-design-system-brief.md). */
 :root {
-  /* Couleurs : neutres */
-  --color-bg: #ffffff;
-  --color-surface: #f4f6f9;
-  --color-text: #1b2433;
-  --color-text-muted: #4a5568;
-  --color-border: #cbd2dc;
-  --color-border-strong: #6b7685; /* bordure des champs : 3:1 minimum sur fond blanc */
+  /* ===== Couche 1 : palette brute ===== */
+  --bordeaux-900: #4a0f1b;
+  --bordeaux-800: #5c1322;
+  --bordeaux-700: #7a1b2d; /* bordeaux institutionnel, couleur de marque */
+  --safran-300: #f0d9a0;
+  --safran-500: #d4a24c; /* décoratif uniquement : jamais pour du texte */
+  --majorelle-700: #24448f;
+  --majorelle-50: #e6ebf7;
+  --rouge-700: #b3261e;
+  --rouge-50: #fdecea;
+  --pierre-0: #fbfaf7;
+  --pierre-100: #f1efe9;
+  --pierre-200: #d9d3c7;
+  --pierre-300: #e8e6df;
+  --encre-900: #1c2321;
+  --encre-700: #4b5753;
+  --encre-500: #7a8580;
+  --vert-succes: #17603a;
+  --vert-succes-50: #e4f2e8;
+  --ocre-800: #6b4a00;
+  --ocre-50: #fbefd2;
+  --neutre-800: #2f3a36;
 
-  /* Couleurs : action */
-  --color-primary: #1f3a5f;
-  --color-primary-hover: #16304f;
+  /* ===== Couche 2 : rôles ===== */
+  --color-bg: var(--pierre-0);
+  --color-surface: var(--pierre-100);
+  --color-text: var(--encre-900);
+  --color-text-muted: var(--encre-700);
+  --color-border: var(--pierre-200);
+  --color-border-strong: var(--encre-500); /* bordure des champs : 3:1 minimum sur le fond */
+
+  --color-primary: var(--bordeaux-700);
+  --color-primary-hover: var(--bordeaux-800);
+  --color-primary-deep: var(--bordeaux-900);
+  --color-primary-tint: #f7e9ec;
   --color-on-primary: #ffffff;
-  --color-focus: #2b6cb0;
+  --color-accent: var(--safran-500); /* filets et ornements */
+  --color-on-banner: var(--pierre-0);
+  --color-on-banner-muted: var(--safran-300);
+  --color-focus: var(--majorelle-700);
 
-  /* Couleurs : statuts (texte / fond) */
-  --color-success: #1e6b3a;
-  --color-success-bg: #e6f4ea;
-  --color-warning: #7a4b00;
-  --color-warning-bg: #fff4dc;
-  --color-danger: #9b1c1c;
-  --color-danger-bg: #fdecec;
-  --color-info: #1f3a5f;
-  --color-info-bg: #e8eff8;
-  --color-neutral: #2d3748;
-  --color-neutral-bg: #e9ecf1;
+  --color-success: var(--vert-succes);
+  --color-success-bg: var(--vert-succes-50);
+  --color-warning: var(--ocre-800);
+  --color-warning-bg: var(--ocre-50);
+  --color-danger: var(--rouge-700);
+  --color-danger-solid: var(--rouge-700);
+  --color-danger-bg: var(--rouge-50);
+  --color-info: var(--majorelle-700);
+  --color-info-bg: var(--majorelle-50);
+  --color-neutral: var(--neutre-800);
+  --color-neutral-bg: var(--pierre-300);
 
-  /* Typographie : deux polices auto-hébergées (@fontsource) */
-  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-heading: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
+  /* Typographie : deux polices auto-hébergées (@fontsource), toutes deux prêtes pour l'arabe */
+  --font-body: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Amiri', Georgia, 'Times New Roman', serif;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.25rem;
-  --text-xl: 1.625rem;
-  --text-2xl: 2.125rem;
-  --leading: 1.55;
+  --text-xl: 1.875rem;
+  --text-2xl: 2.75rem;
+  --leading: 1.6;
 
-  /* Espacements */
+  /* Espacements : échelle fixe */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -45,13 +73,33 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-7: 3rem;
+  --space-8: 4rem;
 
-  /* Rayons et ombres */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --shadow-sm: 0 1px 2px rgb(27 36 51 / 8%);
-  --shadow-md: 0 4px 16px rgb(27 36 51 / 14%);
+  /* Rayons (petits : l'identité vient du motif, pas des arrondis) et ombre */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-xl: 2.5rem;
+  --shadow-md: 0 8px 24px rgb(74 15 27 / 25%);
+
+  /* Mouvement */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 200ms;
 
   /* Mise en page */
   --content-width: 72rem;
+}
+
+/* Contraste élevé (menu d'accessibilité) : fond blanc, texte noir, bordures marquées. */
+:root[data-contrast='high'] {
+  --color-bg: #ffffff;
+  --color-surface: #f0f0f0;
+  --color-text: #000000;
+  --color-text-muted: #1a1a1a;
+  --color-border: #000000;
+  --color-border-strong: #000000;
+  --color-primary: #4a0f1b;
+  --color-primary-hover: #2e0911;
+  --color-primary-tint: #ffffff;
+  --color-focus: #0000d6;
+  --color-on-banner-muted: #ffffff;
 }

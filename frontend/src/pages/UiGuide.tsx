@@ -1,14 +1,48 @@
 import { useState } from 'react'
-import { Alert, Button, Card, Field, Input, Modal, Select, Spinner, StatusBadge, Table } from '../design-system'
+import { Alert, AppHeader, Banner, Button, Card, Field, Input, Modal, Select, Spinner, StatusBadge, Table, Tile, TileGrid } from '../design-system'
+
+// Icônes au trait de démonstration (SVG, couleur héritée du texte).
+const iconProps = { viewBox: '0 0 40 40', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinejoin: 'round', strokeLinecap: 'round' } as const
+const DocumentIcon = (
+  <svg {...iconProps}>
+    <path d="M10 4h14l8 8v24H10z" />
+    <path d="M24 4v8h8M15 20h12M15 26h12M15 32h8" />
+  </svg>
+)
+const UserIcon = (
+  <svg {...iconProps}>
+    <circle cx="20" cy="14" r="6" />
+    <path d="M7 35c1-8 6-12 13-12s12 4 13 12" />
+  </svg>
+)
+const CheckIcon = (
+  <svg {...iconProps}>
+    <circle cx="20" cy="20" r="15" />
+    <path d="M12 20.5l5.5 5.5L28 15" />
+  </svg>
+)
 
 // Guide de style (/ui) : présente chaque composant du design system avec ses variantes.
 function UiGuide() {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
+    <>
+    <AppHeader />
+    <Banner title="Guide de style" subtitle="Les composants de la plateforme DOP, avec toutes leurs variantes." />
     <main className="ds-container">
-      <h1>Guide de style</h1>
-      <p>Composants du design system de la plateforme DOP. Cette page sert de référence visuelle.</p>
+      <h2 style={{ marginTop: 0 }}>Tuiles d'accès rapide</h2>
+      <TileGrid>
+        <Tile title="Ma déclaration" icon={DocumentIcon} href="#">
+          Consulter ou compléter votre déclaration.
+        </Tile>
+        <Tile title="Mon profil" icon={UserIcon} href="#">
+          Gérer les informations de votre compte.
+        </Tile>
+        <Tile title="Mon statut" icon={CheckIcon}>
+          Savoir si vous êtes soumis à l'obligation de déclarer.
+        </Tile>
+      </TileGrid>
 
       <h2>Boutons</h2>
       <p style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
@@ -115,6 +149,7 @@ function UiGuide() {
         <p>Cette fenêtre se ferme avec la touche Échap ou le bouton Annuler.</p>
       </Modal>
     </main>
+    </>
   )
 }
 
