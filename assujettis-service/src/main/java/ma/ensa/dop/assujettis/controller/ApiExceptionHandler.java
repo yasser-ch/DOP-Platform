@@ -1,15 +1,17 @@
-package ma.ensa.dop.assujettis.controller;
+package ma.ensa.dop.declaration.controller;
 
-import jakarta.validation.ConstraintViolationException;
-import ma.ensa.dop.assujettis.exception.CsvImportException;
-import ma.ensa.dop.assujettis.exception.InvalidFileException;
+import ma.ensa.dop.declaration.exception.BienNotFoundException;
+import ma.ensa.dop.declaration.exception.BrouillonDejaExistantException;
+import ma.ensa.dop.declaration.exception.ConflitVersionException;
+import ma.ensa.dop.declaration.exception.DeclarationNotFoundException;
+import ma.ensa.dop.declaration.exception.DeclarationVerrouilleeException;
+import ma.ensa.dop.declaration.exception.LimiteBiensAtteinteException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.List;
 import java.util.Map;
@@ -17,37 +19,53 @@ import java.util.Map;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
-    @ExceptionHandler(CsvImportException.class)
-    ResponseEntity<Map<String, Object>> csvInvalide(CsvImportException e) {
-        return ResponseEntity.unprocessableEntity()
-            .body(Map.of("error", "Import refusé : des lignes sont invalides", "details", e.getErreurs()));
+    @ExceptionHandler(DeclarationNotFoundException.class)
+    ResponseEntity<Map<String, String>> introuvable() {
+        return ResponseEntity.status(404).body(Map.of("error", "Déclaration introuvable"));
     }
 
-    @ExceptionHandler(InvalidFileException.class)
-    ResponseEntity<Map<String, String>> fichierInvalide(InvalidFileException e) {
-        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    // ===== AJOUTÉ (DODP-25) =====
+    @ExceptionHandler(BienNotFoundException.class)
+    ResponseEntity<Map<String, String>> bienIntrouvable() {
+        return ResponseEntity.status(404).body(Map.of("error", "Bien introuvable"));
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    ResponseEntity<Map<String, String>> tropGros() {
-        return ResponseEntity.status(413).body(Map.of("error", "Fichier trop volumineux (2 Mo maximum)"));
+    @ExceptionHandler(LimiteBiensAtteinteException.class)
+    ResponseEntity<Map<String, String>> limiteBiens() {
+        return ResponseEntity.status(409).body(Map.of("error", "Nombre maximum de biens atteint pour cette déclaration"));
+    }
+    // ===== FIN AJOUT =====
+
+    @ExceptionHandler(BrouillonDejaExistantException.class)
+    ResponseEntity<Map<String, Object>> brouillonExistant(BrouillonDejaExistantException e) {
+        // On renvoie l'id du brouillon existant : le front peut proposer "reprendre ce brouillon".
+        return ResponseEntity.status(409).body(Map.of(
+            "error", "Un brouillon de ce type existe déjà : reprenez-le",
+            "declarationId", e.getDeclarationId()));
     }
 
-    @ExceptionHandler(MissingServletRequestPartException.class)
-    ResponseEntity<Map<String, String>> fichierAbsent() {
-        return ResponseEntity.badRequest().body(Map.of("error", "Fichier manquant (champ multipart « file »)"));
+    @ExceptionHandler(DeclarationVerrouilleeException.class)
+    ResponseEntity<Map<String, String>> verrouillee() {
+        return ResponseEntity.status(409).body(Map.of("error", "La déclaration est soumise : modification impossible"));
+    }
+
+    @ExceptionHandler({ConflitVersionException.class, ObjectOptimisticLockingFailureException.class})
+    ResponseEntity<Map<String, String>> conflit() {
+        return ResponseEntity.status(409).body(Map.of(
+            "error", "Le brouillon a été modifié ailleurs : rechargez-le avant de continuer"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    ResponseEntity<Map<String, Object>> formulaireInvalide(MethodArgumentNotValidException e) {
-        // On renvoie seulement le nom du champ + le message, jamais la valeur saisie.
+    ResponseEntity<Map<String, Object>> invalide(MethodArgumentNotValidException e) {
+        // Seulement le nom du champ et le message, jamais la valeur saisie.
         List<Map<String, String>> details = e.getBindingResult().getFieldErrors().stream()
             .map(f -> Map.of("champ", f.getField(), "message", String.valueOf(f.getDefaultMessage()))).toList();
         return ResponseEntity.badRequest().body(Map.of("error", "Données invalides", "details", details));
     }
 
-    @ExceptionHandler({ConstraintViolationException.class, HttpMessageNotReadableException.class})
-    ResponseEntity<Map<String, String>> requeteInvalide() {
-        return ResponseEntity.badRequest().body(Map.of("error", "Requête invalide (paramètre ou format de date incorrect ?)"));
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<Map<String, String>> illisible() {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "Corps de requête invalide (valeur d'énumération inconnue ou format incorrect ?)"));
     }
 }
