@@ -2,7 +2,7 @@
 
 > **Démonstrateur académique** inspiré de la loi 54-06. Ce n'est pas un système officiel de la Cour des comptes. Données de test synthétiques uniquement.
 
-Projet DevSecOps - cycle ingénieur, filière Cybersécurité. Architecture microservices Java / Spring Boot (+ un service Python pour le scoring).
+Projet  DevSecOps - cycle ingénieur, filière Cybersécurité. Architecture microservices Java / Spring Boot (+ un service Python pour le scoring).
 
 ## Structure du dépôt
 
@@ -76,4 +76,4 @@ docker build -t dop/auth-service auth-service
 
 ## Documents
 
-Voir `docs/` et le cahier des charges du projet.
+Voir `docs/` et le cahier des charges du projet,.
