@@ -1,8 +1,17 @@
-# Profil Spring `docker` : routes de la gateway vers les services du reseau Compose (DODP-14).
+# Profil Spring `docker` : routage + rate limiting de la gateway (DODP-14 / DODP-60).
 # Active par SPRING_PROFILES_ACTIVE=docker dans docker-compose.yml.
 spring:
   cloud:
     gateway:
+      # Rate limiting applique a TOUTES les routes : token bucket par IP, stocke dans Redis.
+      # Au-dela du seuil la gateway repond HTTP 429 (Too Many Requests).
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@ipKeyResolver}"
+            redis-rate-limiter.replenishRate: ${RATE_LIMIT_REPLENISH_RATE:10}
+            redis-rate-limiter.burstCapacity: ${RATE_LIMIT_BURST_CAPACITY:20}
+            redis-rate-limiter.requestedTokens: 1
       routes:
         - id: auth
           uri: http://auth-service:8081

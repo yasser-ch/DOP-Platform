@@ -1,13 +1,13 @@
-# DODP-14 (S4) - Environnement local : `docker compose up --build` lance tous les services.
+# DODP-14 (S4) + DODP-60 (S60) - Environnement local : `docker compose up --build` lance tout.
 # Build : services Java depuis la racine du depot (contexte `.`) ; scoring-service depuis son dossier.
 #
-#   cp .env.example .env      # puis definir JWT_SECRET (32 caracteres minimum)
+#   cp .env.example .env      # definir JWT_SECRET (32 car. min) et le compte admin
 #   docker compose up --build
-#   curl http://localhost:8080/auth/actuator/health   # via la gateway
+#   curl http://localhost:8080/assujettis/actuator/health   # via la gateway
 #
-# Reseau : tous les services partagent le reseau `dop-net` et se joignent par leur nom
-# de service (ex. http://auth-service:8081). Seule la gateway est le point d'entree prevu ;
-# les autres ports sont publies sur 127.0.0.1 uniquement, pour le debug local.
+# Exposition : SEULE l'api-gateway publie un port (8080). Les autres services et Redis ne sont
+# joignables que par le reseau interne `dop-net` (par nom de service, ex. http://auth-service:8081).
+# La gateway applique un rate limiting par IP (Redis) : au-dela du seuil -> HTTP 429.
 
 x-java-service: &java-service
   restart: unless-stopped
@@ -32,8 +32,6 @@ services:
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
       DOP_ADMIN_EMAIL: "${DOP_ADMIN_EMAIL:?DOP_ADMIN_EMAIL manquant, voir .env.example}"
       DOP_ADMIN_PASSWORD: "${DOP_ADMIN_PASSWORD:?DOP_ADMIN_PASSWORD manquant, voir .env.example}"
-    ports:
-      - "127.0.0.1:8081:8081"
 
   assujettis-service:
     <<: *java-service
@@ -44,8 +42,7 @@ services:
     container_name: dop-assujettis
     environment:
       SERVER_PORT: 8082
-    ports:
-      - "127.0.0.1:8082:8082"
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
 
   declaration-service:
     <<: *java-service
@@ -56,8 +53,6 @@ services:
     container_name: dop-declaration
     environment:
       SERVER_PORT: 8083
-    ports:
-      - "127.0.0.1:8083:8083"
 
   document-service:
     <<: *java-service
@@ -68,8 +63,6 @@ services:
     container_name: dop-document
     environment:
       SERVER_PORT: 8084
-    ports:
-      - "127.0.0.1:8084:8084"
 
   workflow-service:
     <<: *java-service
@@ -80,8 +73,6 @@ services:
     container_name: dop-workflow
     environment:
       SERVER_PORT: 8085
-    ports:
-      - "127.0.0.1:8085:8085"
 
   reconciliation-service:
     <<: *java-service
@@ -92,8 +83,6 @@ services:
     container_name: dop-reconciliation
     environment:
       SERVER_PORT: 8086
-    ports:
-      - "127.0.0.1:8086:8086"
 
   notification-service:
     <<: *java-service
@@ -104,8 +93,6 @@ services:
     container_name: dop-notification
     environment:
       SERVER_PORT: 8087
-    ports:
-      - "127.0.0.1:8087:8087"
 
   audit-service:
     <<: *java-service
@@ -116,8 +103,6 @@ services:
     container_name: dop-audit
     environment:
       SERVER_PORT: 8088
-    ports:
-      - "127.0.0.1:8088:8088"
 
   reporting-service:
     <<: *java-service
@@ -128,8 +113,6 @@ services:
     container_name: dop-reporting
     environment:
       SERVER_PORT: 8089
-    ports:
-      - "127.0.0.1:8089:8089"
 
   scoring-service:
     build:
@@ -144,8 +127,17 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-    ports:
-      - "127.0.0.1:8090:8090"
+
+  redis:
+    image: redis:7-alpine
+    container_name: dop-redis
+    restart: unless-stopped
+    networks: [dop-net]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
   api-gateway:
     build:
@@ -157,6 +149,10 @@ services:
     networks: [dop-net]
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_REDIS_HOST: redis
+      # Rate limiting par IP (requetes/seconde et rafale). Baisser pour tester le 429.
+      RATE_LIMIT_REPLENISH_RATE: "${RATE_LIMIT_REPLENISH_RATE:-10}"
+      RATE_LIMIT_BURST_CAPACITY: "${RATE_LIMIT_BURST_CAPACITY:-20}"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || wget -qO- http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
@@ -164,6 +160,8 @@ services:
       retries: 10
       start_period: 40s
     depends_on:
+      redis:
+        condition: service_healthy
       auth-service:
         condition: service_healthy
       assujettis-service:
