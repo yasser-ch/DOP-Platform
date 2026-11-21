@@ -10,3 +10,12 @@ node_modules/
 .env
 *.pem
 *.key
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials.json
+application-local.yml
+application-secrets.yml

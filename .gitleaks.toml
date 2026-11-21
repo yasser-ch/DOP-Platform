@@ -1,0 +1,17 @@
+title = "DOP Platform gitleaks config"
+
+[extend]
+useDefault = true   # regles par defaut (AWS, GitHub, JWT, cles privees, etc.)
+
+[allowlist]
+description = "Faux positifs connus"
+paths = [
+    '''(^|/)src/test/resources/.*''',   # a retirer si vous y mettez de vrais secrets
+    '''(^|/)package-lock\.json$''',
+    '''(^|/)\.github/dependency-check-suppressions\.xml$''',
+]
+regexes = [
+    '''changeme''',
+    '''\$\{[A-Z0-9_]+\}''',              # placeholders ${DB_PASSWORD}
+    '''\$\{\{\s*secrets\.[A-Z0-9_]+\s*\}\}''',
+]
