@@ -22,6 +22,11 @@ env:
   # Dependency-Check : score CVSS minimum qui fait echouer (9.0 = CRITICAL).
   DC_FAIL_CVSS: '9'
   # Trivy fs : 1 seul worker + timeout large (evite "context canceled" sur les pom.xml)
+  # Trivy 0.71 plante ("context canceled") sur l'analyse des pom.xml de ce depot.
+  # Les dependances Maven sont couvertes par Dependency-Check (pom) et par le scan
+  # des images (jars). Trivy fs garde package-lock.json, requirements.txt, etc.
+  # Variable d'environnement (et non option) pour eviter l'expansion du glob par le shell.
+  TRIVY_SKIP_FILES: '**/pom.xml'
   TRIVY_FS_OPTS: '--parallel 1 --timeout 15m --skip-version-check --skip-dirs node_modules,target,.git'
 
 jobs:
