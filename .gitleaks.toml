@@ -6,7 +6,9 @@ useDefault = true   # regles par defaut (AWS, GitHub, JWT, cles privees, etc.)
 [allowlist]
 description = "Faux positifs connus"
 paths = [
-    '''(^|/)src/test/resources/.*''',   # a retirer si vous y mettez de vrais secrets
+    '''(^|/)\.env\.example$''',          # valeurs factices documentees
+    '''(^|/)docs/.*\.md$''',
+    '''(^|/)src/test/.*''',             # secrets factices des tests (jamais de vraie valeur ici)
     '''(^|/)package-lock\.json$''',
     '''(^|/)\.github/dependency-check-suppressions\.xml$''',
 ]

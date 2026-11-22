@@ -1,9 +1,11 @@
 package ma.ensa.dop.declaration.controller;
 
+import ma.ensa.dop.declaration.exception.BienNotFoundException;
 import ma.ensa.dop.declaration.exception.BrouillonDejaExistantException;
 import ma.ensa.dop.declaration.exception.ConflitVersionException;
 import ma.ensa.dop.declaration.exception.DeclarationNotFoundException;
 import ma.ensa.dop.declaration.exception.DeclarationVerrouilleeException;
+import ma.ensa.dop.declaration.exception.LimiteBiensAtteinteException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -21,6 +23,18 @@ public class ApiExceptionHandler {
     ResponseEntity<Map<String, String>> introuvable() {
         return ResponseEntity.status(404).body(Map.of("error", "Déclaration introuvable"));
     }
+
+    // ===== AJOUTÉ (DODP-25) =====
+    @ExceptionHandler(BienNotFoundException.class)
+    ResponseEntity<Map<String, String>> bienIntrouvable() {
+        return ResponseEntity.status(404).body(Map.of("error", "Bien introuvable"));
+    }
+
+    @ExceptionHandler(LimiteBiensAtteinteException.class)
+    ResponseEntity<Map<String, String>> limiteBiens() {
+        return ResponseEntity.status(409).body(Map.of("error", "Nombre maximum de biens atteint pour cette déclaration"));
+    }
+    // ===== FIN AJOUT =====
 
     @ExceptionHandler(BrouillonDejaExistantException.class)
     ResponseEntity<Map<String, Object>> brouillonExistant(BrouillonDejaExistantException e) {

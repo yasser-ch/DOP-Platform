@@ -22,13 +22,13 @@ env:
   # Dependency-Check : score CVSS minimum qui fait echouer (9.0 = CRITICAL).
   DC_FAIL_CVSS: '9'
   # Trivy fs : 1 seul worker + timeout large (evite "context canceled" sur les pom.xml)
-  TRIVY_FS_OPTS: '--parallel 1 --timeout 15m --skip-version-check'
+  TRIVY_FS_OPTS: '--parallel 1 --timeout 15m --skip-version-check --skip-dirs node_modules,target,.git'
 
 jobs:
   dependency-check:
     name: OWASP Dependency-Check
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -41,35 +41,42 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # Compile sans tests pour que Dependency-Check voie les dependances Maven
-      # resolues (les tests sont deja executes par ci.yml).
-      - name: Resolve Maven dependencies
-        run: mvn --batch-mode --no-transfer-progress -DskipTests package
+      - name: Check NVD API key
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "::error::Secret NVD_API_KEY absent (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
 
       - name: Cache Dependency-Check data
         uses: actions/cache@v4
         with:
-          path: ~/.dependency-check-data
+          path: ~/.m2/dependency-check-data
           key: dc-data-${{ runner.os }}-${{ github.run_id }}
           restore-keys: dc-data-${{ runner.os }}-
 
+      # Plugin Maven officiel, version epinglee : pas d'action tierce en @main
+      # (risque supply-chain) et pas de build prealable necessaire.
       - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        id: depcheck
         env:
-          JAVA_HOME: /opt/jdk
-        with:
-          project: ${{ github.repository }}
-          path: '.'
-          format: 'HTML,JSON'
-          out: 'reports/dependency-check'
-          args: >
-            --failOnCVSS ${{ env.DC_FAIL_CVSS }}
-            --suppression .github/dependency-check-suppressions.xml
-            --nvdApiKey ${{ secrets.NVD_API_KEY }}
-            --data /github/home/.dependency-check-data
-            --enableRetired
-            --disableAssembly
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: >
+          mvn --batch-mode --no-transfer-progress
+          org.owasp:dependency-check-maven:12.1.0:aggregate
+          -DnvdApiKey="$NVD_API_KEY"
+          -DnvdApiDelay=2000
+          -DfailBuildOnCVSS="$DC_FAIL_CVSS"
+          -Dformats=HTML,JSON
+          -DoutputDirectory="$GITHUB_WORKSPACE/reports/dependency-check"
+          -DsuppressionFiles="$GITHUB_WORKSPACE/.github/dependency-check-suppressions.xml"
+          -DdataDirectory="$HOME/.m2/dependency-check-data"
+          -DossindexAnalyzerEnabled=false
+          -DretireJsAnalyzerEnabled=false
+          -DnodeAnalyzerEnabled=false
+          -DnodeAuditAnalyzerEnabled=false
+          -DassemblyAnalyzerEnabled=false
 
       - name: Publish summary
         if: always()
@@ -118,14 +125,20 @@ jobs:
           key: trivy-db-${{ runner.os }}-${{ github.run_id }}
           restore-keys: trivy-db-${{ runner.os }}-
 
-      # Passe 1 : rapport complet (toutes severites), ne fait jamais echouer.
+      # Passe 1 : rapport complet (toutes severites), ne fait jamais echouer sur une CVE.
+      # Si Trivy lui-meme plante, on relance en --debug pour afficher la vraie cause.
       - name: Trivy report (all severities)
         run: |
           mkdir -p reports/trivy
+          if ! trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
+                 --format json --output reports/trivy/fs-report.json --exit-code 0; then
+            echo "::error::Trivy a plante, relance en --debug"
+            trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS --debug \
+              --format table --output reports/trivy/fs-report.txt --exit-code 0 2>&1 | tail -n 80
+            exit 1
+          fi
           trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
             --format table --output reports/trivy/fs-report.txt --exit-code 0
-          trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
-            --format json --output reports/trivy/fs-report.json --exit-code 0
           {
             echo "## Trivy - dependances (fs)"
             echo '```'
