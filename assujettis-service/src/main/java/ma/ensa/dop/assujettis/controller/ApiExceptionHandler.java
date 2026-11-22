@@ -2,6 +2,7 @@ package ma.ensa.dop.assujettis.controller;
 
 import ma.ensa.dop.assujettis.exception.CsvImportException;
 import ma.ensa.dop.assujettis.exception.InvalidFileException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -41,6 +42,15 @@ public class ApiExceptionHandler {
         List<Map<String, String>> details = e.getBindingResult().getFieldErrors().stream()
             .map(f -> Map.of("champ", f.getField(), "message", String.valueOf(f.getDefaultMessage()))).toList();
         return ResponseEntity.badRequest().body(Map.of("error", "Données invalides", "details", details));
+    }
+
+    /** Paramètres de requête invalides (ex. jours > 365 : @Max) -> 400. */
+    @ExceptionHandler(ConstraintViolationException.class)
+    ResponseEntity<Map<String, Object>> parametreInvalide(ConstraintViolationException e) {
+        List<Map<String, String>> details = e.getConstraintViolations().stream()
+            .map(v -> Map.of("champ", String.valueOf(v.getPropertyPath()), "message", String.valueOf(v.getMessage())))
+            .toList();
+        return ResponseEntity.badRequest().body(Map.of("error", "Paramètre invalide", "details", details));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
