@@ -96,11 +96,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      # Version epinglee (post-incident supply-chain de mars 2026), telechargee
+      # depuis les releases officielles, checksum verifie. Ne pas utiliser
+      # "latest" ni la v0.69.4 (compromise).
       - name: Install Trivy
         run: |
-          TRIVY_VERSION=0.58.1
-          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin trivy
+          VER=0.71.0
+          BASE="https://github.com/aquasecurity/trivy/releases/download/v${VER}"
+          curl -fsSLO "${BASE}/trivy_${VER}_Linux-64bit.tar.gz"
+          curl -fsSLO "${BASE}/trivy_${VER}_checksums.txt"
+          sha256sum --ignore-missing -c "trivy_${VER}_checksums.txt"
+          sudo tar -xzf "trivy_${VER}_Linux-64bit.tar.gz" -C /usr/local/bin trivy
           trivy --version
 
       - name: Cache Trivy DB
@@ -149,11 +155,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      # Version epinglee (post-incident supply-chain de mars 2026), telechargee
+      # depuis les releases officielles, checksum verifie. Ne pas utiliser
+      # "latest" ni la v0.69.4 (compromise).
       - name: Install Trivy
         run: |
-          TRIVY_VERSION=0.58.1
-          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin trivy
+          VER=0.71.0
+          BASE="https://github.com/aquasecurity/trivy/releases/download/v${VER}"
+          curl -fsSLO "${BASE}/trivy_${VER}_Linux-64bit.tar.gz"
+          curl -fsSLO "${BASE}/trivy_${VER}_checksums.txt"
+          sha256sum --ignore-missing -c "trivy_${VER}_checksums.txt"
+          sudo tar -xzf "trivy_${VER}_Linux-64bit.tar.gz" -C /usr/local/bin trivy
           trivy --version
 
       - name: Cache Trivy DB
