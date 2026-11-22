@@ -21,6 +21,8 @@ env:
   TRIVY_FAIL_SEVERITY: 'CRITICAL'
   # Dependency-Check : score CVSS minimum qui fait echouer (9.0 = CRITICAL).
   DC_FAIL_CVSS: '9'
+  # Trivy fs : 1 seul worker + timeout large (evite "context canceled" sur les pom.xml)
+  TRIVY_FS_OPTS: '--parallel 1 --timeout 15m --skip-version-check'
 
 jobs:
   dependency-check:
@@ -120,9 +122,9 @@ jobs:
       - name: Trivy report (all severities)
         run: |
           mkdir -p reports/trivy
-          trivy fs . --scanners vuln --ignore-unfixed \
+          trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
             --format table --output reports/trivy/fs-report.txt --exit-code 0
-          trivy fs . --scanners vuln --ignore-unfixed \
+          trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
             --format json --output reports/trivy/fs-report.json --exit-code 0
           {
             echo "## Trivy - dependances (fs)"
@@ -134,7 +136,7 @@ jobs:
       # Passe 2 : gate. Echec si une vulnerabilite >= seuil.
       - name: Trivy gate
         run: |
-          trivy fs . --scanners vuln --ignore-unfixed \
+          trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
             --severity "$TRIVY_FAIL_SEVERITY" --exit-code 1
 
       - name: Upload Trivy fs report
@@ -188,8 +190,14 @@ jobs:
             dir=$(dirname "$dockerfile")
             name=$(echo "$dir" | sed 's#^\./##; s#[^A-Za-z0-9]#-#g'); name=${name:-root}
             image="dop-local/${name}:ci"
-            echo "::group::Build ${image} (${dockerfile})"
-            docker build -f "$dockerfile" -t "$image" "$dir" || { status=1; echo "::endgroup::"; continue; }
+            # Les Dockerfile Maven multi-modules (mvn -pl <service> -am) ont besoin
+            # de la racine du depot comme contexte ; les autres de leur dossier.
+            if grep -qE 'mvn .*-pl ' "$dockerfile"; then ctx="."; else ctx="$dir"; fi
+            echo "::group::Build ${image} (${dockerfile}, context ${ctx})"
+            if ! docker build -f "$dockerfile" -t "$image" "$ctx"; then
+              echo "::error::Build de l'image echoue pour ${dockerfile}"
+              status=1; echo "::endgroup::"; continue
+            fi
             echo "::endgroup::"
 
             echo "::group::Scan ${image}"
