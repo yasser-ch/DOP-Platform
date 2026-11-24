@@ -1,0 +1,76 @@
+name: DOP Platform - IaC Scan
+
+# Etape "IaC Scanning" du pipeline OWASP : Dockerfile, docker-compose, manifestes
+# et workflows GitHub Actions analyses sans execution.
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: iac-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy-config:
+    name: Trivy config (Dockerfile, compose, K8s)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Trivy
+        run: |
+          VER=0.71.0
+          BASE="https://github.com/aquasecurity/trivy/releases/download/v${VER}"
+          curl -fsSLO "${BASE}/trivy_${VER}_Linux-64bit.tar.gz"
+          curl -fsSLO "${BASE}/trivy_${VER}_checksums.txt"
+          sha256sum --ignore-missing -c "trivy_${VER}_checksums.txt"
+          sudo tar -xzf "trivy_${VER}_Linux-64bit.tar.gz" -C /usr/local/bin trivy
+          trivy --version
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      - name: Rapport complet (non bloquant)
+        run: |
+          mkdir -p reports
+          trivy config . --skip-dirs node_modules,target,.git --skip-version-check \
+            --format table --output reports/trivy-config.txt || true
+          cat reports/trivy-config.txt
+
+      - name: Porte bloquante (HIGH, CRITICAL)
+        run: |
+          trivy config . --skip-dirs node_modules,target,.git --skip-version-check \
+            --severity HIGH,CRITICAL --exit-code 1
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: iac-trivy-config
+          path: reports/
+          retention-days: 14
+
+  workflow-lint:
+    name: Lint des workflows (actionlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: actionlint 1.7.7
+        run: |
+          VER=1.7.7
+          curl -fsSLO "https://github.com/rhysd/actionlint/releases/download/v${VER}/actionlint_${VER}_linux_amd64.tar.gz"
+          curl -fsSLO "https://github.com/rhysd/actionlint/releases/download/v${VER}/actionlint_${VER}_checksums.txt"
+          sha256sum --ignore-missing -c "actionlint_${VER}_checksums.txt"
+          tar -xzf "actionlint_${VER}_linux_amd64.tar.gz" actionlint
+          ./actionlint -color

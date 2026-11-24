@@ -26,9 +26,7 @@ spring:
         - id: declaration
           uri: http://declaration-service:8083
           predicates:
-            - Path=/declaration/**
-          filters:
-            - StripPrefix=1
+            - Path=/declarations/**
         - id: document
           uri: http://document-service:8084
           predicates:

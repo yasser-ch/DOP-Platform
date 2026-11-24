@@ -53,6 +53,7 @@ services:
     container_name: dop-declaration
     environment:
       SERVER_PORT: 8083
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
 
   document-service:
     <<: *java-service

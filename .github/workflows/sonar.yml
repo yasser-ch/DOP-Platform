@@ -2,7 +2,9 @@ name: DOP Platform - SonarCloud
 
 on:
   push:
+    branches: [main, develop, 'feature/**', 'fix/**']
   pull_request:
+    branches: [main, develop]
 
 permissions:
   contents: read
@@ -43,3 +45,4 @@ jobs:
         run: >
           mvn --batch-mode --no-transfer-progress verify
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.qualitygate.wait=true

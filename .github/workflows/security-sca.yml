@@ -5,7 +5,9 @@ name: DOP Platform - Security SCA
 
 on:
   push:
+    branches: [main, develop, 'feature/**', 'fix/**']
   pull_request:
+    branches: [main, develop]
   schedule:
     - cron: '0 3 * * 1'   # lundi 03:00 UTC : nouvelles CVE sur du code inchange
 

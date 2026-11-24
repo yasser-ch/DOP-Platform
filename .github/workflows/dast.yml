@@ -1,0 +1,99 @@
+name: DOP Platform - DAST, Infra & Smoke
+
+# Etapes "DAST" et "Infra Scanning" du pipeline OWASP : la stack docker compose est
+# demarree dans le runner, verifiee (smoke test, ports, rate limiting) puis attaquee
+# par OWASP ZAP via la gateway.
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dast-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dast:
+    name: Compose up, smoke test, infra check, ZAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Preparer l'environnement (.env de test, valeurs jetables)
+        run: |
+          cp .env.example .env
+          # Secret JWT aleatoire pour la CI : jamais la valeur de dev du depot.
+          sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 32)|" .env
+
+      - name: Demarrer la stack (build des images + attente des healthchecks)
+        run: docker compose up -d --build --wait --wait-timeout 600
+
+      - name: Etat des conteneurs
+        run: docker compose ps
+
+      # ---- Infra scanning : configuration d'execution ----
+      - name: Infra - seule la gateway publie un port
+        run: |
+          exposed=$(docker ps --format '{{.Names}} {{.Ports}}' | grep -- '->' | grep -v '^dop-gateway ' || true)
+          if [ -n "$exposed" ]; then echo "::error::Ports exposes non autorises :"; echo "$exposed"; exit 1; fi
+          echo "OK : seul dop-gateway publie un port"
+
+      - name: Infra - aucun conteneur applicatif ne tourne en root
+        run: |
+          bad=0
+          for c in $(docker ps --format '{{.Names}}' | grep -v '^dop-redis$'); do
+            u=$(docker inspect -f '{{.Config.User}}' "$c")
+            if [ -z "$u" ] || [ "$u" = "0" ] || [ "$u" = "root" ]; then echo "::error::$c tourne en root"; bad=1; fi
+          done
+          exit $bad
+
+      - name: Infra - Docker Bench for Security (rapport)
+        continue-on-error: true
+        run: |
+          git clone --depth 1 --branch v1.6.0 https://github.com/docker/docker-bench-security.git /tmp/dbs
+          (cd /tmp/dbs && sudo ./docker-bench-security.sh -c container_runtime,docker_security_operations -l "$GITHUB_WORKSPACE/docker-bench.log") || true
+
+      # ---- Test d'integration ----
+      - name: Smoke test (routage, JWT, 401, ports, rate limiting)
+        run: ./scripts/smoke-test.sh http://localhost:8080
+
+      # ---- DAST ----
+      - name: Relever le rate limiting pour que ZAP ne soit pas bride
+        run: RATE_LIMIT_REPLENISH_RATE=2000 RATE_LIMIT_BURST_CAPACITY=4000 docker compose up -d --wait --wait-timeout 180 api-gateway
+
+      - name: OWASP ZAP baseline
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: 'http://localhost:8080'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -I'
+          allow_issue_writing: false
+          artifact_name: zap-baseline-report
+
+      - name: Logs des conteneurs
+        if: always()
+        run: docker compose logs --no-color > compose.log 2>&1 || true
+
+      - name: Publier les rapports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dast-infra-reports
+          path: |
+            compose.log
+            docker-bench.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Arreter la stack
+        if: always()
+        run: docker compose down -v

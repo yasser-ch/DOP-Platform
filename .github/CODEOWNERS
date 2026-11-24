@@ -1,0 +1,5 @@
+# Les changements sensibles exigent une revue d'un proprietaire.
+/.github/             @yasser-ch
+/infra/               @yasser-ch
+docker-compose.yml    @yasser-ch
+**/SecurityConfig.java @yasser-ch
