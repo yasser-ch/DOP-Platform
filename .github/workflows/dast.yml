@@ -81,7 +81,13 @@ jobs:
 
       - name: Diagnostic gateway (en cas d'echec)
         if: failure()
-        run: docker logs dop-gateway --tail 60 2>&1 || true
+        run: |
+          echo "--- en-tetes d'une requete via la gateway"
+          curl -si http://localhost:8080/assujettis/actuator/health | head -15
+          echo "--- logs gateway (hors migration de proprietes)"
+          docker logs dop-gateway 2>&1 | grep -vE '^\s+(Key|Line|Replacement)|^Property source' | grep -iE 'redis|rate|lettuce|error|warn|exception|profile' | tail -30 || true
+          echo "--- profils actifs"
+          docker exec dop-gateway printenv SPRING_PROFILES_ACTIVE SPRING_DATA_REDIS_HOST || true
 
       - name: Logs des conteneurs
         if: always()
