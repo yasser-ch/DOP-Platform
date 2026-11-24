@@ -79,6 +79,10 @@ jobs:
           allow_issue_writing: false
           artifact_name: zap-baseline-report
 
+      - name: Diagnostic gateway (en cas d'echec)
+        if: failure()
+        run: docker logs dop-gateway --tail 60 2>&1 || true
+
       - name: Logs des conteneurs
         if: always()
         run: docker compose logs --no-color > compose.log 2>&1 || true
