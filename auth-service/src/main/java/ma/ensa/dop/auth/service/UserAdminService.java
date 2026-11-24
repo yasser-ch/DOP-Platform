@@ -1,8 +1,10 @@
 package ma.ensa.dop.auth.service;
 
+import ma.ensa.dop.auth.Ressort;
 import ma.ensa.dop.auth.Role;
 import ma.ensa.dop.auth.dto.UserResponse;
 import ma.ensa.dop.auth.entity.User;
+import ma.ensa.dop.auth.exception.NotMagistratException;
 import ma.ensa.dop.auth.exception.SelfRoleChangeException;
 import ma.ensa.dop.auth.exception.UserNotFoundException;
 import ma.ensa.dop.auth.repository.UserRepository;
@@ -32,5 +34,13 @@ public class UserAdminService {
 
     private static UserResponse toResponse(User u) {
         return new UserResponse(u.getId(), u.getEmail(), u.getRole());
+    }
+
+    @Transactional
+    public UserResponse assignRessort(Long userId, Ressort ressort) {
+        User user = users.findById(userId).orElseThrow(UserNotFoundException::new);
+        if (user.getRole() != Role.MAGISTRAT) throw new NotMagistratException();
+        user.assignRessort(ressort);
+        return UserResponse.from(user);
     }
 }

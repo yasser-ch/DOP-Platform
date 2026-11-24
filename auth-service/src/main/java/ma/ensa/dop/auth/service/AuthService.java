@@ -34,6 +34,5 @@ public class AuthService {
         User user = users.findByEmail(req.email().trim().toLowerCase())
             .filter(u -> encoder.matches(req.password(), u.getPasswordHash()))
             .orElseThrow(InvalidCredentialsException::new);
-        return new UserResponse(user.getId(), user.getEmail(), user.getRole());
-    }
+        return UserResponse.from(user);    }
 }

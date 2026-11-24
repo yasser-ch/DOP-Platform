@@ -27,6 +27,8 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest req) {
         UserResponse u = service.login(req);
-        return new LoginResponse(jwt.generate(u.email(), u.role()), "Bearer", jwt.ttlSeconds());
+        if (mfa.isEnabled(u.id()))
+            return LoginResponse.mfaChallenge(jwt.generateMfaToken(u.email()), jwt.mfaTtlSeconds());
+        return LoginResponse.token(jwt.generate(u.email(), u.role()), jwt.ttlSeconds());
     }
 }

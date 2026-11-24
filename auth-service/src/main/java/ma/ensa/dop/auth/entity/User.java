@@ -1,6 +1,7 @@
 package ma.ensa.dop.auth.entity;
 
 import jakarta.persistence.*;
+import ma.ensa.dop.auth.Ressort;
 import ma.ensa.dop.auth.Role;
 
 // User.java
@@ -21,6 +22,13 @@ public class User {
     private Role role;
 
     protected User() {}  // exigé par JPA
+
+    @Enumerated(EnumType.STRING)
+    private Ressort ressort;                       // nullable : seuls les magistrats en ont un
+
+    public Ressort getRessort() { return ressort; }
+    public void assignRessort(Ressort r) { this.ressort = r; }
+    public void clearRessort() { this.ressort = null; }
 
     public User(String email, String passwordHash, Role role) {
         this.email = email; this.passwordHash = passwordHash; this.role = role;

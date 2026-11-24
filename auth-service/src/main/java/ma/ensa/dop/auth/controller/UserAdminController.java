@@ -27,4 +27,9 @@ public class UserAdminController {
                                    Authentication auth) {
         return service.assignRole(id, req.role(), auth.getName());
     }
+
+    @PutMapping("/{id}/ressort")
+    public UserResponse assignRessort(@PathVariable Long id, @Valid @RequestBody UpdateRessortRequest req) {
+        return service.assignRessort(id, req.ressort());
+    }
 }
