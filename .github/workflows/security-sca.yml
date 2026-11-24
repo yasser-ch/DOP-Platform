@@ -55,12 +55,27 @@ jobs:
             exit 1
           fi
 
-      - name: Cache Dependency-Check data
-        uses: actions/cache@v4
+      # actions/cache ne sauvegarde qu'en cas de succes du job : tant que le job
+      # echouait, la base NVD n'etait jamais mise en cache. On separe restore/save
+      # et on sauvegarde meme en cas d'echec (if: always()).
+      - name: Restore Dependency-Check data
+        id: dc-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.m2/dependency-check-data
           key: dc-data-${{ runner.os }}-${{ github.run_id }}
           restore-keys: dc-data-${{ runner.os }}-
+
+      # Verifie que la cle est acceptee par le NVD (HTTP 200 attendu).
+      - name: Test NVD API key
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "apiKey: ${NVD_API_KEY}" \
+            "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1")
+          echo "NVD API HTTP status: $code"
+          [ "$code" = "200" ] || echo "::warning::NVD a repondu $code (cle invalide/non activee, 403/429 = quota, 503 = NVD indisponible)"
 
       # Plugin Maven officiel, version epinglee : pas d'action tierce en @main
       # (risque supply-chain) et pas de build prealable necessaire.
@@ -72,6 +87,8 @@ jobs:
           org.owasp:dependency-check-maven:12.1.0:aggregate
           -DnvdApiKey="$NVD_API_KEY"
           -DnvdApiDelay=2000
+          -DnvdMaxRetryCount=10
+          -DnvdValidForHours=24
           -DfailBuildOnCVSS="$DC_FAIL_CVSS"
           -Dformats=HTML,JSON
           -DoutputDirectory="$GITHUB_WORKSPACE/reports/dependency-check"
@@ -82,6 +99,13 @@ jobs:
           -DnodeAnalyzerEnabled=false
           -DnodeAuditAnalyzerEnabled=false
           -DassemblyAnalyzerEnabled=false
+
+      - name: Save Dependency-Check data
+        if: always() && steps.dc-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.m2/dependency-check-data
+          key: dc-data-${{ runner.os }}-${{ github.run_id }}
 
       - name: Publish summary
         if: always()
@@ -97,7 +121,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: dependency-check-report
-          path: reports/dependency-check
+          path: |
+            target/dependency-check-report.*
+            reports/dependency-check
           if-no-files-found: warn
           retention-days: 14
 
@@ -203,6 +229,7 @@ jobs:
           mkdir -p reports/trivy
           status=0
           found=0
+          failed=()
           while IFS= read -r dockerfile; do
             found=1
             dir=$(dirname "$dockerfile")
@@ -214,7 +241,7 @@ jobs:
             echo "::group::Build ${image} (${dockerfile}, context ${ctx})"
             if ! docker build -f "$dockerfile" -t "$image" "$ctx"; then
               echo "::error::Build de l'image echoue pour ${dockerfile}"
-              status=1; echo "::endgroup::"; continue
+              status=1; failed+=("build:${dockerfile}"); echo "::endgroup::"; continue
             fi
             echo "::endgroup::"
 
@@ -229,13 +256,20 @@ jobs:
               head -c 30000 "reports/trivy/image-${name}.txt"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
-            trivy image "$image" --ignore-unfixed --scanners vuln \
-              --severity "$TRIVY_FAIL_SEVERITY" --exit-code 1 || status=1
+            if ! trivy image "$image" --ignore-unfixed --scanners vuln \
+                 --severity "$TRIVY_FAIL_SEVERITY" --exit-code 1; then
+              status=1; failed+=("scan:${name}")
+              echo "::error::${name} : vulnerabilites ${TRIVY_FAIL_SEVERITY} detectees"
+            fi
             echo "::endgroup::"
           done < <(find . -name 'Dockerfile*' -not -path '*/node_modules/*' -not -path './.git/*')
 
           if [ "$found" -eq 0 ]; then
             echo "Aucun Dockerfile trouve : rien a scanner." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Echecs : ${failed[*]}"
+            { echo "## Images en echec"; printf -- '- %s\n' "${failed[@]}"; } >> "$GITHUB_STEP_SUMMARY"
           fi
           exit $status
 
