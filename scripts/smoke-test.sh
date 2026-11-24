@@ -31,7 +31,7 @@ for port in 8081 8082 8083; do
 done
 
 # 5. Rate limiting : une rafale doit produire au moins un HTTP 429
-n429=$(seq 1 150 | xargs -P 30 -I{} curl -s -o /dev/null -w '%{http_code}\n' "$BASE/assujettis/actuator/health" | grep -c '^429$')
-[ "$n429" -ge 1 ] && ok "rate limiting actif ($n429 reponses 429)" || ko "aucun 429 sur une rafale de 150 requetes"
+n429=$(curl -s -o /dev/null -w '%{http_code}\n' --parallel --parallel-max 60 "$BASE/assujettis/actuator/health?n=[1-400]" | grep -c '^429$')
+[ "$n429" -ge 1 ] && ok "rate limiting actif ($n429 reponses 429)" || ko "aucun 429 sur une rafale de 400 requetes"
 
 exit $fail

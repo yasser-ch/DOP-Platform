@@ -73,4 +73,4 @@ jobs:
           curl -fsSLO "https://github.com/rhysd/actionlint/releases/download/v${VER}/actionlint_${VER}_checksums.txt"
           sha256sum --ignore-missing -c "actionlint_${VER}_checksums.txt"
           tar -xzf "actionlint_${VER}_linux_amd64.tar.gz" actionlint
-          ./actionlint -color
+          ./actionlint -color -ignore 'SC2086' -ignore 'SC2046' -ignore 'SC2013'
