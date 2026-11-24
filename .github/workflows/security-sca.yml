@@ -55,9 +55,8 @@ jobs:
             exit 1
           fi
 
-      # actions/cache ne sauvegarde qu'en cas de succes du job : tant que le job
-      # echouait, la base NVD n'etait jamais mise en cache. On separe restore/save
-      # et on sauvegarde meme en cas d'echec (if: always()).
+      # Restore/save separes : la base NVD est sauvegardee des que la mise a jour
+      # reussit, meme si l'analyse echoue ensuite (CVE trouvees).
       - name: Restore Dependency-Check data
         id: dc-cache
         uses: actions/cache/restore@v4
@@ -77,6 +76,36 @@ jobs:
           echo "NVD API HTTP status: $code"
           [ "$code" = "200" ] || echo "::warning::NVD a repondu $code (cle invalide/non activee, 403/429 = quota, 503 = NVD indisponible)"
 
+      # Etape 1 : mise a jour de la base NVD, isolee et rejouee en cas d'erreur
+      # transitoire du NVD (HTTP 503/524...). Le cache n'est sauvegarde qu'apres
+      # une mise a jour complete reussie (jamais une base partielle).
+      - name: Update NVD database (with retries)
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          for attempt in 1 2 3 4; do
+            echo "::group::NVD update, tentative ${attempt}/4"
+            if mvn --batch-mode --no-transfer-progress -N \
+                 org.owasp:dependency-check-maven:12.1.0:update-only \
+                 -DnvdApiKey="$NVD_API_KEY" \
+                 -DnvdApiDelay=2000 \
+                 -DnvdMaxRetryCount=10 \
+                 -DdataDirectory="$HOME/.m2/dependency-check-data"; then
+              echo "::endgroup::"; exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::Tentative ${attempt} echouee (NVD instable), nouvelle tentative dans 60 s"
+            sleep 60
+          done
+          echo "::error::Mise a jour NVD impossible apres 4 tentatives"
+          exit 1
+
+      - name: Save Dependency-Check data
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.m2/dependency-check-data
+          key: dc-data-${{ runner.os }}-${{ github.run_id }}
+
       # Plugin Maven officiel, version epinglee : pas d'action tierce en @main
       # (risque supply-chain) et pas de build prealable necessaire.
       - name: Run OWASP Dependency-Check
@@ -86,9 +115,7 @@ jobs:
           mvn --batch-mode --no-transfer-progress
           org.owasp:dependency-check-maven:12.1.0:aggregate
           -DnvdApiKey="$NVD_API_KEY"
-          -DnvdApiDelay=2000
-          -DnvdMaxRetryCount=10
-          -DnvdValidForHours=24
+          -DautoUpdate=false
           -DfailBuildOnCVSS="$DC_FAIL_CVSS"
           -Dformats=HTML,JSON
           -DoutputDirectory="$GITHUB_WORKSPACE/reports/dependency-check"
@@ -99,13 +126,6 @@ jobs:
           -DnodeAnalyzerEnabled=false
           -DnodeAuditAnalyzerEnabled=false
           -DassemblyAnalyzerEnabled=false
-
-      - name: Save Dependency-Check data
-        if: always() && steps.dc-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ~/.m2/dependency-check-data
-          key: dc-data-${{ runner.os }}-${{ github.run_id }}
 
       - name: Publish summary
         if: always()
