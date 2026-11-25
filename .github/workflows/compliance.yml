@@ -1,0 +1,48 @@
+name: DOP Platform - Compliance (Policy as Code)
+
+# Etape "Compliance Check / PaC" : les exigences non fonctionnelles du cahier des
+# charges sont verifiees automatiquement avec OPA/Conftest (infra/policies/*.rego).
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compliance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CONFTEST_IMAGE: openpolicyagent/conftest:v0.56.0
+
+jobs:
+  conftest:
+    name: Conftest (Dockerfile + compose)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Politiques sur les Dockerfile
+        run: |
+          docker run --rm -v "$PWD:/project" -w /project "$CONFTEST_IMAGE" \
+            test --policy infra/policies --namespace dockerfile --parser dockerfile $(git ls-files '*Dockerfile')
+
+      - name: Politiques sur docker-compose.yml
+        run: |
+          docker run --rm -v "$PWD:/project" -w /project "$CONFTEST_IMAGE" \
+            test --policy infra/policies --namespace compose docker-compose.yml
+
+      - name: Chaque module Maven possede au moins un test
+        run: |
+          missing=0
+          for m in $(sed -n 's#.*<module>\(.*\)</module>.*#\1#p' pom.xml); do
+            if [ -d "$m/src/main/java" ] && ! find "$m/src/test" -name '*Test*.java' 2>/dev/null | grep -q .; then
+              echo "::error::Module $m sans test"; missing=1
+            fi
+          done
+          exit $missing

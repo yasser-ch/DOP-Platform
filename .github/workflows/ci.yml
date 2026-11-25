@@ -2,7 +2,9 @@ name: DOP Platform - CI
 
 on:
   push:
+    branches: [main, develop, 'feature/**', 'fix/**']
   pull_request:
+    branches: [main, develop]
 
 permissions:
   contents: read

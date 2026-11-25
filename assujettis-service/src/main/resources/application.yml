@@ -4,9 +4,27 @@ server:
 spring:
   application:
     name: assujettis-service
+  # ===== AJOUTÉ (DODP-21/22/23) =====
+  jpa:
+    hibernate:
+      ddl-auto: create-drop      # démonstrateur : base H2 en mémoire recréée à chaque démarrage
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 2MB         # taille max d'un fichier CSV importé
+      max-request-size: 2MB
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
+# ===== AJOUTÉ (DODP-21/22/23) =====
+dop:
+  jwt:
+    secret: ${JWT_SECRET:}       # MÊME secret que auth-service (jamais dans le dépôt)
+    issuer: dop-auth-service
+  assujettis:
+    import-max-rows: 5000        # garde-fou : nombre max de lignes par fichier CSV
+    formulaire-url: /declarations/nouvelle   # lien renvoyé à l'agent présent sur la liste (S12)

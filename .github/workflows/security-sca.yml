@@ -1,0 +1,305 @@
+name: DOP Platform - Security SCA
+
+# S50 / NF-06 : scan des dependances (OWASP Dependency-Check) et des images
+# de conteneurs (Trivy) a chaque build. Echec au-dela du seuil defini.
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 3 * * 1'   # lundi 03:00 UTC : nouvelles CVE sur du code inchange
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sca-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Seuil d'echec. Trivy : severites bloquantes (separees par des virgules).
+  TRIVY_FAIL_SEVERITY: 'CRITICAL'
+  # Dependency-Check : score CVSS minimum qui fait echouer (9.0 = CRITICAL).
+  DC_FAIL_CVSS: '9'
+  # Trivy fs : 1 seul worker + timeout large (evite "context canceled" sur les pom.xml)
+  # Trivy 0.71 plante ("context canceled") sur l'analyse des pom.xml de ce depot.
+  # Les dependances Maven sont couvertes par Dependency-Check (pom) et par le scan
+  # des images (jars). Trivy fs garde package-lock.json, requirements.txt, etc.
+  # Variable d'environnement (et non option) pour eviter l'expansion du glob par le shell.
+  TRIVY_SKIP_FILES: '**/pom.xml'
+  TRIVY_FS_OPTS: '--parallel 1 --timeout 15m --skip-version-check --skip-dirs node_modules,target,.git'
+
+jobs:
+  dependency-check:
+    name: OWASP Dependency-Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Check NVD API key
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "::error::Secret NVD_API_KEY absent (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      # Restore/save separes : la base NVD est sauvegardee des que la mise a jour
+      # reussit, meme si l'analyse echoue ensuite (CVE trouvees).
+      - name: Restore Dependency-Check data
+        id: dc-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.m2/dependency-check-data
+          key: dc-data-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: dc-data-${{ runner.os }}-
+
+      # Verifie que la cle est acceptee par le NVD (HTTP 200 attendu).
+      - name: Test NVD API key
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "apiKey: ${NVD_API_KEY}" \
+            "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1")
+          echo "NVD API HTTP status: $code"
+          [ "$code" = "200" ] || echo "::warning::NVD a repondu $code (cle invalide/non activee, 403/429 = quota, 503 = NVD indisponible)"
+
+      # Etape 1 : mise a jour de la base NVD, isolee et rejouee en cas d'erreur
+      # transitoire du NVD (HTTP 503/524...). Le cache n'est sauvegarde qu'apres
+      # une mise a jour complete reussie (jamais une base partielle).
+      - name: Update NVD database (with retries)
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          for attempt in 1 2 3 4; do
+            echo "::group::NVD update, tentative ${attempt}/4"
+            if mvn --batch-mode --no-transfer-progress -N \
+                 org.owasp:dependency-check-maven:12.1.0:update-only \
+                 -DnvdApiKey="$NVD_API_KEY" \
+                 -DnvdApiDelay=2000 \
+                 -DnvdMaxRetryCount=10 \
+                 -DdataDirectory="$HOME/.m2/dependency-check-data"; then
+              echo "::endgroup::"; exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::Tentative ${attempt} echouee (NVD instable), nouvelle tentative dans 60 s"
+            sleep 60
+          done
+          echo "::error::Mise a jour NVD impossible apres 4 tentatives"
+          exit 1
+
+      - name: Save Dependency-Check data
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.m2/dependency-check-data
+          key: dc-data-${{ runner.os }}-${{ github.run_id }}
+
+      # Plugin Maven officiel, version epinglee : pas d'action tierce en @main
+      # (risque supply-chain) et pas de build prealable necessaire.
+      - name: Run OWASP Dependency-Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: >
+          mvn --batch-mode --no-transfer-progress
+          org.owasp:dependency-check-maven:12.1.0:aggregate
+          -DnvdApiKey="$NVD_API_KEY"
+          -DautoUpdate=false
+          -DfailBuildOnCVSS="$DC_FAIL_CVSS"
+          -Dformats=HTML,JSON
+          -DoutputDirectory="$GITHUB_WORKSPACE/reports/dependency-check"
+          -DsuppressionFiles="$GITHUB_WORKSPACE/.github/dependency-check-suppressions.xml"
+          -DdataDirectory="$HOME/.m2/dependency-check-data"
+          -DossindexAnalyzerEnabled=false
+          -DretireJsAnalyzerEnabled=false
+          -DnodeAnalyzerEnabled=false
+          -DnodeAuditAnalyzerEnabled=false
+          -DassemblyAnalyzerEnabled=false
+
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo "## OWASP Dependency-Check"
+            echo "Seuil d'echec : CVSS >= ${DC_FAIL_CVSS}"
+            echo "Le rapport HTML complet est dans l'artefact **dependency-check-report**."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Dependency-Check report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-check-report
+          path: |
+            target/dependency-check-report.*
+            reports/dependency-check
+          if-no-files-found: warn
+          retention-days: 14
+
+  trivy-fs:
+    name: Trivy - dependances (filesystem)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # Version epinglee (post-incident supply-chain de mars 2026), telechargee
+      # depuis les releases officielles, checksum verifie. Ne pas utiliser
+      # "latest" ni la v0.69.4 (compromise).
+      - name: Install Trivy
+        run: |
+          VER=0.71.0
+          BASE="https://github.com/aquasecurity/trivy/releases/download/v${VER}"
+          curl -fsSLO "${BASE}/trivy_${VER}_Linux-64bit.tar.gz"
+          curl -fsSLO "${BASE}/trivy_${VER}_checksums.txt"
+          sha256sum --ignore-missing -c "trivy_${VER}_checksums.txt"
+          sudo tar -xzf "trivy_${VER}_Linux-64bit.tar.gz" -C /usr/local/bin trivy
+          trivy --version
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      # Passe 1 : rapport complet (toutes severites), ne fait jamais echouer sur une CVE.
+      # Si Trivy lui-meme plante, on relance en --debug pour afficher la vraie cause.
+      - name: Trivy report (all severities)
+        run: |
+          mkdir -p reports/trivy
+          if ! trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
+                 --format json --output reports/trivy/fs-report.json --exit-code 0; then
+            echo "::error::Trivy a plante, relance en --debug"
+            trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS --debug \
+              --format table --output reports/trivy/fs-report.txt --exit-code 0 2>&1 | tail -n 80
+            exit 1
+          fi
+          trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
+            --format table --output reports/trivy/fs-report.txt --exit-code 0
+          {
+            echo "## Trivy - dependances (fs)"
+            echo '```'
+            head -c 60000 reports/trivy/fs-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Passe 2 : gate. Echec si une vulnerabilite >= seuil.
+      - name: Trivy gate
+        run: |
+          trivy fs . --scanners vuln --ignore-unfixed $TRIVY_FS_OPTS \
+            --severity "$TRIVY_FAIL_SEVERITY" --exit-code 1
+
+      - name: Upload Trivy fs report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-fs-report
+          path: reports/trivy
+          if-no-files-found: warn
+          retention-days: 14
+
+  trivy-image:
+    name: Trivy - images de conteneurs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # Version epinglee (post-incident supply-chain de mars 2026), telechargee
+      # depuis les releases officielles, checksum verifie. Ne pas utiliser
+      # "latest" ni la v0.69.4 (compromise).
+      - name: Install Trivy
+        run: |
+          VER=0.71.0
+          BASE="https://github.com/aquasecurity/trivy/releases/download/v${VER}"
+          curl -fsSLO "${BASE}/trivy_${VER}_Linux-64bit.tar.gz"
+          curl -fsSLO "${BASE}/trivy_${VER}_checksums.txt"
+          sha256sum --ignore-missing -c "trivy_${VER}_checksums.txt"
+          sudo tar -xzf "trivy_${VER}_Linux-64bit.tar.gz" -C /usr/local/bin trivy
+          trivy --version
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      # Decouvre automatiquement tous les Dockerfile du depot, construit chaque
+      # image puis la scanne. Rien a maintenir quand un service est ajoute.
+      - name: Build and scan every Dockerfile
+        run: |
+          set -uo pipefail
+          mkdir -p reports/trivy
+          status=0
+          found=0
+          failed=()
+          while IFS= read -r dockerfile; do
+            found=1
+            dir=$(dirname "$dockerfile")
+            name=$(echo "$dir" | sed 's#^\./##; s#[^A-Za-z0-9]#-#g'); name=${name:-root}
+            image="dop-local/${name}:ci"
+            # Les Dockerfile Maven multi-modules (mvn -pl <service> -am) ont besoin
+            # de la racine du depot comme contexte ; les autres de leur dossier.
+            if grep -qE 'mvn .*-pl ' "$dockerfile"; then ctx="."; else ctx="$dir"; fi
+            echo "::group::Build ${image} (${dockerfile}, context ${ctx})"
+            if ! docker build -f "$dockerfile" -t "$image" "$ctx"; then
+              echo "::error::Build de l'image echoue pour ${dockerfile}"
+              status=1; failed+=("build:${dockerfile}"); echo "::endgroup::"; continue
+            fi
+            echo "::endgroup::"
+
+            echo "::group::Scan ${image}"
+            trivy image "$image" --ignore-unfixed --scanners vuln \
+              --format table --output "reports/trivy/image-${name}.txt" --exit-code 0
+            trivy image "$image" --ignore-unfixed --scanners vuln \
+              --format json --output "reports/trivy/image-${name}.json" --exit-code 0
+            {
+              echo "## Trivy - image ${name}"
+              echo '```'
+              head -c 30000 "reports/trivy/image-${name}.txt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            if ! trivy image "$image" --ignore-unfixed --scanners vuln \
+                 --severity "$TRIVY_FAIL_SEVERITY" --exit-code 1; then
+              status=1; failed+=("scan:${name}")
+              echo "::error::${name} : vulnerabilites ${TRIVY_FAIL_SEVERITY} detectees"
+            fi
+            echo "::endgroup::"
+          done < <(find . -name 'Dockerfile*' -not -path '*/node_modules/*' -not -path './.git/*')
+
+          if [ "$found" -eq 0 ]; then
+            echo "Aucun Dockerfile trouve : rien a scanner." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Echecs : ${failed[*]}"
+            { echo "## Images en echec"; printf -- '- %s\n' "${failed[@]}"; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit $status
+
+      - name: Upload Trivy image reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-image-reports
+          path: reports/trivy
+          if-no-files-found: ignore
+          retention-days: 14

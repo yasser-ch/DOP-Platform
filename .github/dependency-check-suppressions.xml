@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Faux positifs OWASP Dependency-Check. Chaque suppression doit etre justifiee
+  et avoir une date d'expiration pour etre re-evaluee.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+    <suppress until="2027-01-31Z">
+      <notes>Exemple : CVE non exploitable dans notre usage, voir ticket SXX.</notes>
+      <packageUrl regex="true">^pkg:maven/org\.example/lib@.*$</packageUrl>
+      <cve>CVE-2024-00000</cve>
+    </suppress>
+    -->
+</suppressions>

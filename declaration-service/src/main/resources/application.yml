@@ -4,9 +4,20 @@ server:
 spring:
   application:
     name: declaration-service
+  # ===== AJOUTÉ (DODP-24) =====
+  jpa:
+    hibernate:
+      ddl-auto: create-drop      # démonstrateur : base H2 en mémoire recréée à chaque démarrage
+    open-in-view: false
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
+# ===== AJOUTÉ (DODP-24) =====
+dop:
+  jwt:
+    secret: ${JWT_SECRET:}       # MÊME secret que auth-service (jamais dans le dépôt)
+    issuer: dop-auth-service
