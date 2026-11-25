@@ -33,6 +33,7 @@ jobs:
           cp .env.example .env
           # Secret JWT aleatoire pour la CI : jamais la valeur de dev du depot.
           sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 32)|" .env
+          sed -i "s|^MFA_ENCRYPTION_KEY=.*|MFA_ENCRYPTION_KEY=$(openssl rand -base64 32)|" .env
 
       - name: Demarrer la stack (build des images + attente des healthchecks)
         run: docker compose up -d --build --wait --wait-timeout 600

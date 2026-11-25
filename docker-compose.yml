@@ -30,6 +30,7 @@ services:
     environment:
       SERVER_PORT: 8081
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
+      MFA_ENCRYPTION_KEY: "${MFA_ENCRYPTION_KEY:?MFA_ENCRYPTION_KEY manquante (32 octets Base64), copier .env.example vers .env}"
       DOP_ADMIN_EMAIL: "${DOP_ADMIN_EMAIL:?DOP_ADMIN_EMAIL manquant, voir .env.example}"
       DOP_ADMIN_PASSWORD: "${DOP_ADMIN_PASSWORD:?DOP_ADMIN_PASSWORD manquant, voir .env.example}"
 

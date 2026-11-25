@@ -30,6 +30,10 @@ c=$(code "$BASE/declarations"); [ "$c" = 401 ] && ok "GET /declarations sans jet
 c=$(code "$BASE/declarations" -H "Authorization: Bearer $TOKEN"); [ "$c" = 200 ] && ok "GET /declarations avec jeton -> 200" || ko "avec jeton attendu 200, recu $c"
 c=$(code "$BASE/declarations" -H "Authorization: Bearer invalide.jeton.xxx"); [ "$c" = 401 ] && ok "jeton falsifie -> 401" || ko "jeton falsifie attendu 401, recu $c"
 
+# 3b. MFA (TOTP) : setup refuse sans jeton, accepte avec jeton ; le compte n'est pas encore protege
+c=$(code -X POST "$BASE/auth/mfa/setup"); [ "$c" = 401 ] && ok "MFA setup sans jeton -> 401" || ko "MFA setup sans jeton attendu 401, recu $c"
+c=$(code -X POST "$BASE/auth/mfa/setup" -H "Authorization: Bearer $TOKEN"); [ "$c" = 200 ] && ok "MFA setup avec jeton -> 200" || ko "MFA setup avec jeton attendu 200, recu $c"
+
 # 4. Seule la gateway est exposee : les services internes ne repondent pas depuis l'hote
 for port in 8081 8082 8083; do
   c=$(code -m 2 "http://localhost:$port/actuator/health" || true)
