@@ -103,6 +103,7 @@ services:
     container_name: dop-audit
     environment:
       SERVER_PORT: 8088
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
 
   reporting-service:
     <<: *java-service
