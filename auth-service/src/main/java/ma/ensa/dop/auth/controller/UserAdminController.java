@@ -1,12 +1,18 @@
 package ma.ensa.dop.auth.controller;
 
 import jakarta.validation.Valid;
+import ma.ensa.dop.auth.dto.UpdateRessortRequest;
 import ma.ensa.dop.auth.dto.UpdateRoleRequest;
 import ma.ensa.dop.auth.dto.UserResponse;
 import ma.ensa.dop.auth.service.UserAdminService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -26,5 +32,10 @@ public class UserAdminController {
                                    @Valid @RequestBody UpdateRoleRequest req,
                                    Authentication auth) {
         return service.assignRole(id, req.role(), auth.getName());
+    }
+
+    @PutMapping("/{id}/ressort")
+    public UserResponse assignRessort(@PathVariable Long id, @Valid @RequestBody UpdateRessortRequest req) {
+        return service.assignRessort(id, req.ressort());
     }
 }

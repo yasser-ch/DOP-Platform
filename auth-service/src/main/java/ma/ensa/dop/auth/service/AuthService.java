@@ -26,7 +26,7 @@ public class AuthService {
         String email = req.email().trim().toLowerCase();
         if (users.existsByEmail(email)) throw new EmailAlreadyUsedException();
         User saved = users.save(new User(email, encoder.encode(req.password()), Role.DECLARANT));
-        return new UserResponse(saved.getId(), saved.getEmail(), saved.getRole());
+        return UserResponse.from(saved);
     }
 
     @Transactional(readOnly = true)
@@ -34,6 +34,5 @@ public class AuthService {
         User user = users.findByEmail(req.email().trim().toLowerCase())
             .filter(u -> encoder.matches(req.password(), u.getPasswordHash()))
             .orElseThrow(InvalidCredentialsException::new);
-        return new UserResponse(user.getId(), user.getEmail(), user.getRole());
-    }
+        return UserResponse.from(user);    }
 }

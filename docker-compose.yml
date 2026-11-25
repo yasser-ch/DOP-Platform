@@ -5,7 +5,7 @@
 #   docker compose up --build
 #   curl http://localhost:8080/assujettis/actuator/health   # via la gateway
 #
-# Exposition : SEULE l'api-gateway publie un port (8080). Les autres services et Redis ne sont
+# Exposition : seuls l'api-gateway (8080) et le frontend (3000) publient un port. Les autres services et Redis ne sont
 # joignables que par le reseau interne `dop-net` (par nom de service, ex. http://auth-service:8081).
 # La gateway applique un rate limiting par IP (Redis) : au-dela du seuil -> HTTP 429.
 
@@ -30,6 +30,7 @@ services:
     environment:
       SERVER_PORT: 8081
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
+      MFA_ENCRYPTION_KEY: "${MFA_ENCRYPTION_KEY:?MFA_ENCRYPTION_KEY manquante (32 octets Base64), copier .env.example vers .env}"
       DOP_ADMIN_EMAIL: "${DOP_ADMIN_EMAIL:?DOP_ADMIN_EMAIL manquant, voir .env.example}"
       DOP_ADMIN_PASSWORD: "${DOP_ADMIN_PASSWORD:?DOP_ADMIN_PASSWORD manquant, voir .env.example}"
 
@@ -53,6 +54,7 @@ services:
     container_name: dop-declaration
     environment:
       SERVER_PORT: 8083
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, copier .env.example vers .env}"
 
   document-service:
     <<: *java-service
@@ -184,6 +186,28 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+
+  # Interface web (DODP-55). nginx relaie /api vers l'api-gateway : le navigateur ne parle
+  # qu'a une seule origine, donc aucun CORS. Avec la gateway, seul service publie a l'hote.
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    image: dop/frontend:local
+    container_name: dop-frontend
+    restart: unless-stopped
+    networks: [dop-net]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:8080"
 
 networks:
   dop-net:

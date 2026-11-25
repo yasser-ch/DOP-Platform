@@ -20,3 +20,6 @@ dop:
     secret: ${JWT_SECRET:}
     issuer: dop-auth-service
     ttl-minutes: 15
+  mfa:
+    issuer: DOP
+    encryption-key: ${MFA_ENCRYPTION_KEY:}
