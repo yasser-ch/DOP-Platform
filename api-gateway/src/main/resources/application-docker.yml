@@ -57,8 +57,6 @@ spring:
           uri: http://audit-service:8088
           predicates:
             - Path=/audit/**
-          filters:
-            - StripPrefix=1
         - id: reporting
           uri: http://reporting-service:8089
           predicates:

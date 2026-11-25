@@ -1,0 +1,21 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: audit-service
+  jpa:
+    hibernate:
+      ddl-auto: create-drop      # démonstrateur : base H2 en mémoire (PostgreSQL prévu au ticket S59)
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+dop:
+  jwt:
+    secret: ${JWT_SECRET:}       # MÊME secret que auth-service (jamais dans le dépôt)
+    issuer: dop-auth-service
