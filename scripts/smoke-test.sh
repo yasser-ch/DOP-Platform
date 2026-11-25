@@ -11,6 +11,12 @@ code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
 # 1. La gateway route vers les services (sante via StripPrefix)
 c=$(code "$BASE/assujettis/actuator/health"); [ "$c" = 200 ] && ok "gateway -> assujettis-service (health 200)" || ko "gateway -> assujettis health ($c)"
 
+# 1b. Frontend (nginx) : page servie et proxy /api -> gateway (meme origine, sans CORS)
+FRONT="${FRONTEND_URL:-http://localhost:3000}"
+c=$(code "$FRONT/"); [ "$c" = 200 ] && ok "frontend sert la page d'accueil (200)" || ko "frontend / ($c)"
+c=$(code "$FRONT/api/assujettis/actuator/health"); [ "$c" = 200 ] && ok "frontend /api -> gateway -> assujettis (200)" || ko "proxy /api ($c)"
+c=$(code "$FRONT/une-route-spa"); [ "$c" = 200 ] && ok "routage SPA (index.html en repli)" || ko "repli SPA ($c)"
+
 # 2. Inscription + connexion (auth-service)
 EMAIL="smoke-$(date +%s)@example.com"; PASS="Smoke-Test-123!"
 c=$(code -X POST "$BASE/auth/register" -H 'Content-Type: application/json' -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}")

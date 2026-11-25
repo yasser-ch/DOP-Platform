@@ -3,12 +3,14 @@ package compose
 
 import rego.v1
 
-# Seule la gateway publie un port.
+# Seuls la gateway (API) et le frontend (interface) publient un port.
+exposed_allowed := {"api-gateway", "frontend"}
+
 deny contains msg if {
 	some name, svc in input.services
-	name != "api-gateway"
+	not name in exposed_allowed
 	svc.ports
-	msg := sprintf("Le service '%s' publie un port : seule api-gateway doit etre exposee", [name])
+	msg := sprintf("Le service '%s' publie un port : seuls api-gateway et frontend sont exposes", [name])
 }
 
 # Chaque service doit avoir un healthcheck.
