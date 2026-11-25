@@ -21,10 +21,14 @@ export interface LoginRequest {
   password: string
 }
 
+// Sans MFA : accessToken + tokenType. Avec MFA activee : { mfaRequired: true, mfaToken } (jeton
+// intermediaire de 5 min a envoyer avec le code a POST /auth/mfa/verify). Les champs null sont omis.
 export interface LoginResponse {
-  accessToken: string
-  tokenType: string // "Bearer"
-  expiresIn: number // secondes
+  accessToken?: string
+  tokenType?: string // "Bearer"
+  expiresIn?: number // secondes
+  mfaRequired?: boolean
+  mfaToken?: string
 }
 
 // ----- GET /assujettis -----

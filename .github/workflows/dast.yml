@@ -41,11 +41,11 @@ jobs:
         run: docker compose ps
 
       # ---- Infra scanning : configuration d'execution ----
-      - name: Infra - seule la gateway publie un port
+      - name: Infra - seuls la gateway et le frontend publient un port
         run: |
-          exposed=$(docker ps --format '{{.Names}} {{.Ports}}' | grep -- '->' | grep -v '^dop-gateway ' || true)
+          exposed=$(docker ps --format '{{.Names}} {{.Ports}}' | grep -- '->' | grep -vE '^dop-(gateway|frontend) ' || true)
           if [ -n "$exposed" ]; then echo "::error::Ports exposes non autorises :"; echo "$exposed"; exit 1; fi
-          echo "OK : seul dop-gateway publie un port"
+          echo "OK : seuls dop-gateway et dop-frontend publient un port"
 
       - name: Infra - aucun conteneur applicatif ne tourne en root
         run: |

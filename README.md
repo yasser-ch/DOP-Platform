@@ -19,7 +19,7 @@ Projet  DevSecOps - cycle ingénieur, filière Cybersécurité. Architecture mic
 | `audit-service` | 8088 | Journalisation immuable et traçabilité (FR-37, FR-38) |
 | `reporting-service` | 8089 | Statistiques et tableaux de bord (FR-39, FR-40) |
 | `scoring-service` | 8090 | Score de risque par IA (Python / FastAPI, FR-31 à FR-33) |
-| `frontend/` | - | Interface web (à définir) |
+| `frontend/` | 3000 | Interface web React + Vite (nginx, relaie `/api` vers la gateway) |
 | `infra/` | - | Docker Compose / Kubernetes, CI/CD, outils de sécurité |
 | `docs/` | - | Conception, documentation, ADR |
 
