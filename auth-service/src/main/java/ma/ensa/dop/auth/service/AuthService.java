@@ -26,7 +26,7 @@ public class AuthService {
         String email = req.email().trim().toLowerCase();
         if (users.existsByEmail(email)) throw new EmailAlreadyUsedException();
         User saved = users.save(new User(email, encoder.encode(req.password()), Role.DECLARANT));
-        return new UserResponse(saved.getId(), saved.getEmail(), saved.getRole());
+        return UserResponse.from(saved);
     }
 
     @Transactional(readOnly = true)

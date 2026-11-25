@@ -21,7 +21,7 @@ public class UserAdminService {
 
     @Transactional(readOnly = true)
     public List<UserResponse> listUsers() {
-        return users.findAll().stream().map(UserAdminService::toResponse).toList();
+        return users.findAll().stream().map(UserResponse::from).toList();
     }
 
     @Transactional
@@ -29,11 +29,7 @@ public class UserAdminService {
         User user = users.findById(userId).orElseThrow(UserNotFoundException::new);
         if (user.getEmail().equalsIgnoreCase(currentAdminEmail)) throw new SelfRoleChangeException();
         user.setRole(newRole);
-        return toResponse(users.save(user));
-    }
-
-    private static UserResponse toResponse(User u) {
-        return new UserResponse(u.getId(), u.getEmail(), u.getRole());
+        return UserResponse.from(users.save(user));
     }
 
     @Transactional
