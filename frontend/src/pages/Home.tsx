@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { getHealth } from '../api/endpoints'
-import { Alert, Banner, Button, Card, Spinner, Stat, StatGrid, StatusBadge, Tile, TileGrid } from '../design-system'
+import { Alert, Banner, Button, ButtonLink, Card, NewsCarousel, Photo, Spinner, Stat, StatGrid, StatusBadge, Tile, TileGrid } from '../design-system'
 import type { StatusTone } from '../design-system'
 import { useT } from '../i18n'
+import { FEATURE, GALLERY, NEWS, SLIDES } from './homeContent'
 
 type HealthStatus = 'idle' | 'loading' | 'UP' | 'DOWN' | 'unreachable'
 
@@ -57,15 +58,64 @@ function Home() {
 
   return (
     <>
-      <Banner title={t('homeTitle')} subtitle={t('homeSubtitle')} />
+      <Banner
+        campaign
+        title={t('campaignTitle')}
+        subtitle={t('homeSubtitle')}
+        aside={
+          <div className="gov-booklet" aria-hidden="true">
+            <img src="/seal.svg" alt="" width={90} height={90} />
+            <p>Déclaration du patrimoine 2026</p>
+          </div>
+        }
+      >
+        <p style={{ marginTop: 'var(--space-5)' }}>
+          <ButtonLink href="#/inscription" variant="secondary">
+            {t('campaignCta')}
+          </ButtonLink>
+        </p>
+      </Banner>
       <main className="ds-container">
-        <StatGrid>
-          <Stat value="1 250" label="assujettis suivis (chiffre fictif)" />
-          <Stat value="87 %" label="déclarations déposées à temps (chiffre fictif)" />
-          <Stat value="48" label="organismes concernés (chiffre fictif)" />
-        </StatGrid>
+        <NewsCarousel slides={SLIDES} />
 
-        <h2>Que souhaitez-vous faire ?</h2>
+        <div className="gov-columns">
+          <section aria-labelledby="actualites">
+            <h2 id="actualites" className="gov-section-title">
+              Actualités
+            </h2>
+            <ul className="gov-news">
+              {NEWS.map((item) => (
+                <li key={item.title}>
+                  <Photo name={item.image} alt="" />
+                  <div>
+                    <time dateTime={item.date}>{item.date.split('-').reverse().join('/')}</time>
+                    <a href={item.href}>{item.title}</a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section aria-labelledby="alaune">
+            <h2 id="alaune" className="gov-section-title">
+              À la une
+            </h2>
+            <a className="gov-feature" href={FEATURE.href}>
+              <Photo name={FEATURE.image} alt={FEATURE.alt} />
+              <span className="gov-feature__title">{FEATURE.title}</span>
+            </a>
+          </section>
+        </div>
+
+        <h2 className="gov-section-title">Galerie</h2>
+        <ul className="gov-gallery">
+          {GALLERY.map((item) => (
+            <li key={item.image}>
+              <Photo name={item.image} alt={item.alt} />
+            </li>
+          ))}
+        </ul>
+
+        <h2 className="gov-section-title">Que souhaitez-vous faire ?</h2>
         <TileGrid>
           <Tile title="Je vérifie ma situation" icon={CheckIcon} href="#/espace-declarant" moreLabel={t('seeMore')}>
             Savoir si je figure sur la liste des assujettis et connaître mon échéance.
@@ -81,14 +131,28 @@ function Home() {
           </Tile>
         </TileGrid>
 
-        <h2>Les étapes</h2>
+        <h2 className="gov-section-title">Les étapes</h2>
         <ol style={{ paddingInlineStart: 'var(--space-5)', maxWidth: '40rem' }}>
           <li>Créez votre compte et connectez-vous.</li>
           <li>Vérifiez que vous êtes soumis à l'obligation de déclarer.</li>
           <li>Déposez votre déclaration avant l'échéance.</li>
         </ol>
 
-        <h2>État de la plateforme</h2>
+      </main>
+
+      <section className="gov-figures" aria-labelledby="chiffres">
+        <div className="gov-container">
+          <h2 id="chiffres">Chiffres clés (données fictives)</h2>
+          <StatGrid>
+            <Stat value="1 250" label="assujettis suivis" />
+            <Stat value="87 %" label="déclarations déposées à temps" />
+            <Stat value="48" label="organismes concernés" />
+          </StatGrid>
+        </div>
+      </section>
+
+      <div className="ds-container">
+        <h2 className="gov-section-title">État de la plateforme</h2>
         <Card>
           <p>Vérifiez que l'API répond.</p>
           <Button variant="secondary" onClick={checkHealth} disabled={status === 'loading'}>
@@ -106,7 +170,7 @@ function Home() {
             )}
           </div>
         </Card>
-      </main>
+      </div>
     </>
   )
 }

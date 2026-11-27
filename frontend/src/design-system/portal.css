@@ -1,0 +1,655 @@
+/* Habillage « portail institutionnel » : en-tête, campagne, carrousel, actualités, pied de page, cookies. */
+
+.gov-container {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding-inline: var(--space-4);
+}
+
+/* ----- Avertissement, langues, en-tête ----- */
+.gov-disclaimer {
+  margin: 0;
+  padding: var(--space-1) var(--space-4);
+  background: var(--color-panel);
+  color: var(--color-on-banner);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+}
+.gov-langbar {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-card);
+}
+.gov-langbar .gov-container {
+  display: flex;
+  justify-content: flex-end;
+}
+.ds-lang {
+  display: flex;
+  gap: var(--space-2);
+}
+.ds-lang button {
+  min-height: 2rem;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.ds-lang button[aria-pressed='true'] {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.gov-header {
+  position: relative;
+  z-index: 40;
+  background: var(--color-card);
+  box-shadow: 0 2px 10px -2px rgb(0 0 0 / 18%);
+}
+.gov-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  padding-block: var(--space-3);
+}
+.gov-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.gov-brand span {
+  display: block;
+}
+.gov-brand__name {
+  color: var(--color-primary);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.gov-brand__tag {
+  max-width: 11rem;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+.gov-menu > ul,
+.gov-submenu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gov-menu > ul {
+  display: flex;
+}
+.gov-menu > ul > li {
+  position: relative;
+  border-inline-end: 1px solid var(--color-border);
+}
+.gov-menu > ul > li:last-child {
+  border-inline-end: 0;
+}
+.gov-menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 11rem;
+  min-height: 2.75rem;
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: start;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.gov-menu button:hover,
+.gov-menu button[aria-expanded='true'] {
+  color: var(--color-primary);
+}
+.gov-menu button svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+.gov-submenu {
+  position: absolute;
+  inset-inline-start: 0;
+  top: calc(100% + var(--space-2));
+  min-width: 15rem;
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-accent);
+  background: var(--color-card);
+  box-shadow: var(--shadow-md);
+}
+.gov-submenu a {
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.gov-submenu a:hover,
+.gov-submenu a[aria-current='page'] {
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+.gov-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.gov-iconbtn {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.gov-iconbtn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.gov-login {
+  text-transform: uppercase;
+}
+.gov-burger {
+  display: none;
+}
+.gov-search {
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.gov-search ul {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.gov-search li a {
+  display: block;
+  padding: var(--space-1) 0;
+}
+.gov-search p {
+  margin: var(--space-2) 0 0;
+}
+
+@media (max-width: 68rem) {
+  .gov-burger {
+    display: grid;
+  }
+  .gov-menu {
+    display: none;
+    order: 3;
+    width: 100%;
+  }
+  .gov-menu--open {
+    display: block;
+  }
+  .gov-menu > ul {
+    flex-direction: column;
+  }
+  .gov-menu > ul > li {
+    border-inline-end: 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .gov-menu button {
+    justify-content: space-between;
+    width: 100%;
+    max-width: none;
+  }
+  .gov-submenu {
+    position: static;
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+/* ----- Bandeau de titre : vert, zellige ton sur ton, bandes obliques ----- */
+.ds-banner {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-primary) url('./zellige.svg') repeat;
+  color: var(--color-on-banner);
+}
+.ds-banner::before,
+.ds-banner::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+.ds-banner::before {
+  inset-inline-end: 22%;
+  width: 5rem;
+  background: var(--color-accent);
+}
+.ds-banner::after {
+  inset-inline-end: 17%;
+  width: 2rem;
+  background: var(--color-primary-deep);
+}
+.ds-banner__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+.ds-banner__title {
+  margin: 0;
+  color: var(--color-on-banner);
+  font-size: var(--text-xl);
+  text-transform: uppercase;
+}
+.ds-banner__subtitle {
+  margin: var(--space-2) 0 0;
+  color: var(--color-on-banner-muted);
+  font-size: var(--text-lg);
+}
+.ds-banner--campaign .ds-banner__inner {
+  padding-block: var(--space-7);
+}
+.ds-banner--campaign .ds-banner__title {
+  max-width: 34rem;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.05;
+}
+.ds-banner__aside {
+  flex: none;
+  margin-inline-end: var(--space-6);
+}
+@media (max-width: 48rem) {
+  .ds-banner__aside {
+    display: none;
+  }
+  .ds-banner::before,
+  .ds-banner::after {
+    opacity: 0.35;
+  }
+}
+.gov-booklet {
+  width: 11rem;
+  padding: 0 0 var(--space-4);
+  border-top: 12px solid var(--color-accent);
+  border-bottom: 12px solid var(--color-primary);
+  background: #ffffff;
+  box-shadow: 10px 10px 0 rgb(0 0 0 / 25%);
+  color: var(--color-text);
+  text-align: center;
+  transform: rotate(3deg);
+}
+.gov-booklet img {
+  display: block;
+  margin: var(--space-5) auto var(--space-4);
+}
+.gov-booklet p {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ----- Photos d'illustration ----- */
+.gov-photo {
+  display: block;
+  overflow: hidden;
+  background: var(--color-primary) url('./zellige.svg') repeat;
+}
+.gov-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ----- Carrousel ----- */
+.gov-carousel__frame {
+  position: relative;
+}
+.gov-carousel__slide {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  min-height: 23rem;
+  background: var(--color-panel);
+  color: var(--color-on-banner);
+}
+.gov-carousel__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-6);
+  border-inline-start: 4px solid var(--color-accent);
+}
+.gov-carousel__panel h2 {
+  margin: 0 0 var(--space-3);
+  color: var(--color-on-banner);
+  font-size: var(--text-xl);
+  line-height: 1.3;
+}
+.gov-carousel__date {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.gov-carousel__image {
+  min-height: 15rem;
+}
+.gov-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-text);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.gov-carousel__arrow svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.gov-carousel__arrow--prev {
+  inset-inline-start: calc(-1 * var(--space-5));
+}
+.gov-carousel__arrow--next {
+  inset-inline-end: calc(-1 * var(--space-5));
+}
+[dir='rtl'] .gov-carousel__arrow svg {
+  transform: scaleX(-1);
+}
+.gov-carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.gov-carousel__pause {
+  min-height: 2rem;
+  margin-inline-end: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-card);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.gov-carousel__dot {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 6px solid transparent;
+  background: var(--color-border-strong) padding-box;
+  cursor: pointer;
+}
+.gov-carousel__dot[aria-current='true'] {
+  background-color: var(--color-accent);
+}
+@media (max-width: 48rem) {
+  .gov-carousel__slide {
+    grid-template-columns: 1fr;
+  }
+  .gov-carousel__arrow {
+    display: none;
+  }
+}
+
+/* ----- Actualités, À la une, galerie, chiffres ----- */
+.gov-section-title {
+  padding-inline-start: var(--space-3);
+  border-inline-start: 6px solid var(--color-accent);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+}
+.gov-columns {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: var(--space-6);
+}
+.gov-columns h2 {
+  margin-top: var(--space-6);
+}
+@media (max-width: 56rem) {
+  .gov-columns {
+    grid-template-columns: 1fr;
+  }
+}
+.gov-news {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+}
+.gov-news li {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-3);
+}
+.gov-news li + li {
+  border-top: 1px solid var(--color-border);
+}
+.gov-news .gov-photo {
+  flex: none;
+  width: 6rem;
+  height: 4rem;
+}
+.gov-news time {
+  display: block;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.gov-news a {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.gov-news a:hover {
+  text-decoration: underline;
+}
+.gov-feature {
+  position: relative;
+  display: block;
+  color: var(--color-on-primary);
+  text-decoration: none;
+}
+.gov-feature .gov-photo {
+  aspect-ratio: 4 / 3;
+}
+.gov-feature__title {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  padding: var(--space-4);
+  border-top: 4px solid var(--color-accent);
+  background: rgb(0 74 53 / 90%);
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+.gov-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gov-gallery .gov-photo {
+  aspect-ratio: 3 / 2;
+}
+@media (max-width: 48rem) {
+  .gov-gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.gov-figures {
+  margin-top: var(--space-7);
+  padding-block: var(--space-6);
+  border-block: 4px solid var(--color-accent);
+  background: var(--color-primary) url('./zellige.svg') repeat;
+  color: var(--color-on-primary);
+}
+.gov-figures h2 {
+  margin-top: 0;
+  color: var(--color-on-primary);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+}
+.gov-figures .ds-stat {
+  border: 0;
+  border-inline-start: 3px solid rgb(255 255 255 / 45%);
+  border-radius: 0;
+  background: transparent;
+}
+.gov-figures .ds-stat__value,
+.gov-figures .ds-stat__label {
+  color: var(--color-on-primary);
+}
+
+/* ----- Pied de page ----- */
+.ds-footer {
+  margin-top: var(--space-7);
+  border-top: 4px solid var(--color-accent);
+  background: var(--color-panel);
+  color: var(--color-on-banner);
+  font-size: var(--text-sm);
+}
+.ds-footer__inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+.ds-footer__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-6);
+}
+.ds-footer__about {
+  margin: 0;
+  max-width: 24rem;
+}
+.ds-footer__about img {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+.ds-footer__title {
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgb(255 255 255 / 25%);
+  color: var(--color-on-banner);
+  font-size: var(--text-base);
+  text-transform: uppercase;
+}
+.ds-footer__links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-footer__links li {
+  margin-bottom: var(--space-2);
+}
+.ds-footer a {
+  color: var(--color-on-banner);
+}
+.ds-footer :focus-visible {
+  outline-color: var(--color-on-banner);
+}
+.ds-footer__note {
+  margin: var(--space-6) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgb(255 255 255 / 25%);
+  color: var(--color-on-banner-muted);
+}
+
+/* ----- Barre de cookies : « Refuser » et « Accepter » strictement identiques ----- */
+.ds-cookie {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 50;
+  background: var(--color-primary-deep);
+  color: var(--color-on-primary);
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 25%);
+}
+.ds-cookie__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-6);
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+.ds-cookie__text {
+  flex: 1 1 24rem;
+}
+.ds-cookie__text h2 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-lg);
+}
+.ds-cookie__text p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+.ds-cookie a {
+  color: var(--color-on-primary);
+}
+.ds-cookie__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.ds-cookie .ds-btn {
+  min-width: 11rem;
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #004a35;
+}
+.ds-cookie :focus-visible {
+  outline-color: #ffffff;
+}
+
+/* Bouton posé sur le bandeau vert : fond blanc pour rester lisible */
+.ds-banner .ds-btn {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #004a35;
+  text-transform: uppercase;
+}
+
+/* Petit écran : les boutons flottants passent en bas pour ne pas masquer le texte */
+@media (max-width: 48rem) {
+  .ds-floating {
+    top: auto;
+    bottom: var(--space-4);
+    transform: none;
+  }
+}

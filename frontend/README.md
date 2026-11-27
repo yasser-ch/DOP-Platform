@@ -1,7 +1,7 @@
 # frontend
 
 Interface web de la plateforme DOP : React 18 + TypeScript (strict) + Vite.
-Choix documentés dans [`docs/decisions/`](../docs/decisions/) : framework (0002), design system (0003), conformité des données (0004).
+Choix documentés dans [`docs/decisions/`](../docs/decisions/) : framework (0002), design system (0003), conformité des données (0004), refonte institutionnelle (0005).
 
 L'interface est pour l'instant un ensemble de **maquettes** (données fictives, formulaires non reliés à l'API), sauf le test de santé de l'accueil qui appelle `/api/actuator/health`. Les vrais écrans suivent les tickets Jira (routage S81, connexion S42, etc.).
 
@@ -41,7 +41,7 @@ Les textes juridiques sont des **textes de maquette** à compléter et valider p
 ```
 frontend/
 ├── index.html            # point d'entrée HTML (icône d'onglet)
-├── public/               # fichiers servis tels quels : logo, licences des polices
+├── public/               # fichiers servis tels quels : sceau, images d'illustration, licence de la police
 ├── vite.config.ts        # config Vite (plugin React + proxy /api)
 ├── tsconfig.json         # TypeScript en mode strict
 ├── nginx.conf            # config nginx de l'image Docker (proxy /api + fallback SPA)
@@ -91,6 +91,10 @@ Ces écrans n'ont pas encore d'endpoint correspondant :
 
 Lien d'évitement, focus visible, navigation complète au clavier (le focus passe au contenu à chaque changement de page, Échap ferme le menu d'accessibilité), contrastes contrôlés WCAG 2.1 AA (audit automatique des textes de toutes les pages), menu flottant (taille du texte, contraste élevé), icônes décoratives masquées aux lecteurs d'écran.
 
+## Images d'illustration
+
+Elles se placent dans `public/images/` au format WebP (environ 1200 × 800) : `patio`, `zellige`, `salle`, `dossiers`, `couloir`, `porte`, `donnees`, `archives` (extension `.webp`). Tant qu'un fichier manque, un motif zellige le remplace. Règles : ni personne reconnaissable, ni drapeau, emblème, logo ou texte incrusté.
+
 ## Licences
 
-Polices : Amiri et IBM Plex Sans Arabic, sous SIL Open Font License 1.1 (textes dans `public/licenses/`). Voir la page `#/licences` pour le détail, y compris le statut du logo (généré par IA, conditions d'usage de l'outil à vérifier avant publication).
+Police : IBM Plex Sans Arabic, sous SIL Open Font License 1.1 (texte dans `public/licenses/`). Le sceau est propre à la plateforme et les images d'illustration sont générées par IA ; les conditions d'usage de l'outil sont à vérifier avant publication (page `#/licences`).

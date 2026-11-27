@@ -1,47 +1,52 @@
 /* Tokens du design system DOP : seul fichier à modifier pour changer l'identité visuelle.
    Deux couches : 1) couleurs brutes (palette), 2) rôles (ce que les composants utilisent).
-   Contrastes vérifiés WCAG 2.1 AA (voir docs/decisions/0003-design-system-brief.md). */
+   Contrastes vérifiés WCAG 2.1 AA (voir docs/decisions/0005-refonte-institutionnelle.md). */
 :root {
   /* ===== Couche 1 : palette brute ===== */
-  --bordeaux-900: #4a0f1b;
-  --bordeaux-800: #5c1322;
-  --bordeaux-700: #7a1b2d; /* bordeaux institutionnel, couleur de marque */
-  --safran-300: #f0d9a0;
-  --safran-500: #d4a24c; /* décoratif uniquement : jamais pour du texte */
-  --majorelle-700: #24448f;
-  --majorelle-50: #e6ebf7;
+  --vert-900: #004a35;
+  --vert-800: #00573f;
+  --vert-700: #006c4e; /* vert institutionnel, couleur de marque */
+  --vert-50: #e5f1ec;
+  --rouge-800: #9e1b1e; /* liseré d'accent */
+  --or-500: #c9a24a; /* sceau et ornements : jamais pour du texte */
+  --anthracite-900: #2b2e31;
+  --bleu-700: #1d4ed8;
+  --bleu-50: #e6ecfb;
   --rouge-700: #b3261e;
   --rouge-50: #fdecea;
-  --pierre-0: #fbfaf7;
-  --pierre-100: #f1efe9;
-  --pierre-200: #d9d3c7;
-  --pierre-300: #e8e6df;
-  --encre-900: #1c2321;
-  --encre-700: #4b5753;
-  --encre-500: #7a8580;
+  --gris-0: #ffffff;
+  --gris-100: #f4f6f5;
+  --gris-200: #d8dcda;
+  --gris-300: #e7e9e8;
+  --encre-900: #1f2426;
+  --encre-700: #4a5256;
+  --encre-500: #747d82;
   --vert-succes: #17603a;
   --vert-succes-50: #e4f2e8;
   --ocre-800: #6b4a00;
   --ocre-50: #fbefd2;
-  --neutre-800: #2f3a36;
+  --neutre-800: #2f3638;
 
   /* ===== Couche 2 : rôles ===== */
-  --color-bg: var(--pierre-0);
-  --color-surface: var(--pierre-100);
+  --color-bg: var(--gris-100);
+  --color-surface: var(--gris-300);
+  --color-card: var(--gris-0);
   --color-text: var(--encre-900);
   --color-text-muted: var(--encre-700);
-  --color-border: var(--pierre-200);
+  --color-border: var(--gris-200);
   --color-border-strong: var(--encre-500); /* bordure des champs : 3:1 minimum sur le fond */
 
-  --color-primary: var(--bordeaux-700);
-  --color-primary-hover: var(--bordeaux-800);
-  --color-primary-deep: var(--bordeaux-900);
-  --color-primary-tint: #f7e9ec;
+  --color-primary: var(--vert-700);
+  --color-primary-hover: var(--vert-800);
+  --color-primary-deep: var(--vert-900);
+  --color-primary-tint: var(--vert-50);
   --color-on-primary: #ffffff;
-  --color-accent: var(--safran-500); /* filets et ornements */
-  --color-on-banner: var(--pierre-0);
-  --color-on-banner-muted: var(--safran-300);
-  --color-focus: var(--majorelle-700);
+  --color-accent: var(--rouge-800); /* filets et bandes */
+  --color-gold: var(--or-500);
+  --color-panel: var(--anthracite-900);
+  --color-on-banner: #ffffff;
+  --color-on-banner-muted: #d5eae2;
+  --color-focus: var(--bleu-700);
 
   --color-success: var(--vert-succes);
   --color-success-bg: var(--vert-succes-50);
@@ -50,14 +55,14 @@
   --color-danger: var(--rouge-700);
   --color-danger-solid: var(--rouge-700);
   --color-danger-bg: var(--rouge-50);
-  --color-info: var(--majorelle-700);
-  --color-info-bg: var(--majorelle-50);
+  --color-info: var(--bleu-700);
+  --color-info-bg: var(--bleu-50);
   --color-neutral: var(--neutre-800);
-  --color-neutral-bg: var(--pierre-300);
+  --color-neutral-bg: var(--gris-300);
 
-  /* Typographie : deux polices auto-hébergées (@fontsource), toutes deux prêtes pour l'arabe */
+  /* Typographie : une seule police auto-hébergée (@fontsource), prête pour l'arabe */
   --font-body: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-heading: 'Amiri', Georgia, 'Times New Roman', serif;
+  --font-heading: var(--font-body);
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.25rem;
@@ -75,18 +80,18 @@
   --space-7: 3rem;
   --space-8: 4rem;
 
-  /* Rayons (petits : l'identité vient du motif, pas des arrondis) et ombre */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-xl: 2.5rem;
-  --shadow-md: 0 8px 24px rgb(74 15 27 / 25%);
+  /* Angles presque droits (portail institutionnel) et ombre */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-xl: 0;
+  --shadow-md: 0 8px 24px rgb(0 40 28 / 22%);
 
   /* Mouvement */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --duration: 200ms;
 
   /* Mise en page */
-  --content-width: 72rem;
+  --content-width: 73rem;
 }
 
 /* Contraste élevé (menu d'accessibilité) : fond blanc, texte noir, bordures marquées. */
@@ -97,8 +102,8 @@
   --color-text-muted: #1a1a1a;
   --color-border: #000000;
   --color-border-strong: #000000;
-  --color-primary: #4a0f1b;
-  --color-primary-hover: #2e0911;
+  --color-primary: #004a35;
+  --color-primary-hover: #00291d;
   --color-primary-tint: #ffffff;
   --color-focus: #0000d6;
   --color-on-banner-muted: #ffffff;

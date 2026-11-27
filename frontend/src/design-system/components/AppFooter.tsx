@@ -18,7 +18,10 @@ export function AppFooter({ about, columns, note }: AppFooterProps) {
     <footer className="ds-footer">
       <div className="ds-footer__inner">
         <div className="ds-footer__grid">
-          <p className="ds-footer__about">{about}</p>
+          <p className="ds-footer__about">
+            <img src="/seal.svg" alt="" width={56} height={56} />
+            {about}
+          </p>
           {columns.map((column) => (
             <nav key={column.title} aria-label={column.title}>
               <h2 className="ds-footer__title">{column.title}</h2>

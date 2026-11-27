@@ -3,7 +3,7 @@ import type { ComponentType } from 'react'
 import { useAccessibility } from './accessibility'
 import { ConsentProvider, useConsent } from './consent'
 import { AccessibilityMenu, AppFooter, AppHeader, CookieBanner, LanguageSwitch, SkipLink } from './design-system'
-import type { FooterColumn, NavLink } from './design-system'
+import type { FooterColumn, MenuEntry, NavLink } from './design-system'
 import { LangContext, useT } from './i18n'
 import type { Lang } from './i18n'
 import Aide from './pages/Aide'
@@ -64,6 +64,32 @@ function Shell({ path, lang, onLangChange }: { path: string; lang: Lang; onLangC
     { href: '#/assujettis', label: t('navAssujettis') },
     { href: '#/connexion', label: t('navLogin') },
   ]
+  const menu: MenuEntry[] = [
+    {
+      label: t('menuDeclaration'),
+      items: [
+        { href: '#/', label: t('menuPresentation') },
+        { href: '#/connexion', label: t('menuSubmit') },
+      ],
+    },
+    { label: t('menuAssujettis'), items: [{ href: '#/assujettis', label: t('menuList') }] },
+    {
+      label: t('navDeclarant'),
+      items: [
+        { href: '#/espace-declarant', label: t('menuSituation') },
+        { href: '#/inscription', label: t('menuSignup') },
+      ],
+    },
+    {
+      label: t('menuHelp'),
+      items: [
+        { href: '#/aide', label: t('footerHelp') },
+        { href: '#/mentions-legales', label: t('footerLegal') },
+        { href: '#/conditions', label: t('footerTerms') },
+        { href: '#/confidentialite', label: t('footerPrivacy') },
+      ],
+    },
+  ]
   const columns: FooterColumn[] = [
     { title: t('footerUseful'), items: links.slice(0, 3) },
     {
@@ -109,10 +135,19 @@ function Shell({ path, lang, onLangChange }: { path: string; lang: Lang; onLangC
         />
       )}
       <AppHeader
-        links={links}
+        menu={menu}
         current={`#${path}`}
-        utilityMessage={t('utility')}
-        tagline={t('tagline')}
+        labels={{
+          disclaimer: t('utility'),
+          brand: t('brand'),
+          tagline: t('tagline'),
+          home: t('navHome'),
+          menu: t('menu'),
+          login: t('navLogin'),
+          search: t('search'),
+          searchPlaceholder: t('searchPlaceholder'),
+          searchEmpty: t('searchEmpty'),
+        }}
         languageSwitch={<LanguageSwitch lang={lang} onChange={onLangChange} />}
       />
       <div id="contenu" ref={contentRef} tabIndex={-1} className="ds-content">
